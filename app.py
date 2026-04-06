@@ -940,15 +940,13 @@ if st.session_state.pagina == "DRE":
     html_yoy = f"""
     <div style="background-color: #FFFFFF; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; padding: 15px; margin-bottom: 0px;">
         <style>
-            /* AJUSTE DE RESPONSIVIDADE */
+            /* CONFIGURAÇÃO BASE DA TABELA */
             .y-table {{ 
-                width: max-content !important; 
-                min-width: 950px; 
                 border-collapse: collapse; 
                 color: #000; 
                 font-size: 11px; 
                 font-family: 'Segoe UI', sans-serif; 
-                table-layout: auto !important; /* REMOVIDO FIXED */
+                table-layout: auto !important;
             }} 
             
             .y-table thead tr th {{ 
@@ -959,35 +957,19 @@ if st.session_state.pagina == "DRE":
                 white-space: nowrap; 
             }} 
             
-            /* FORÇAR COLUNAS A NÃO ENCOLHER */
-            .y-table th, 
-            .y-table td {{ 
-                white-space: nowrap; 
-                min-width: 75px; 
-            }}
+            .y-table td {{ padding: 8px 10px; border-bottom: 1px solid #F0F0F0; text-align: center; }} 
 
-            /* PRIMEIRA COLUNA (CATEGORIAS) MAIOR E FLEXÍVEL */
-            .y-table thead th:first-child {{ 
+            /* CONFIGURAÇÃO DAS COLUNAS */
+            .y-table th, .y-table td {{ white-space: nowrap; min-width: 75px; }}
+            .y-table th:first-child, .y-table td:first-child {{ 
                 text-align: left !important; 
                 width: 220px !important; 
                 min-width: 200px !important;
                 white-space: normal !important; 
+                font-weight: bold;
             }} 
-            
-            .y-table td {{ padding: 8px 10px; border-bottom: 1px solid #F0F0F0; text-align: center; }} 
-            
-            .y-table td:first-child {{ 
-                text-align: left; 
-                font-weight: bold; 
-                white-space: normal !important; 
-                min-width: 200px !important; 
-            }} 
-            
-            .y-yellow {{ background-color: #f0f0f0 !important; font-weight: bold; }} 
-            .y-pct-clean {{ font-weight: normal !important; font-style: italic !important; }} 
-            .h-grp {{ text-align: center !important; font-weight: bold; border-bottom: 2px solid #FFF !important; font-size: 10px; }}
-            
-            /* CONTAINER DE SCROLL MELHORADO */
+
+            /* CONTAINER DE SCROLL */
             .responsive-scroll-yoy {{ 
                 width: 100% !important; 
                 overflow-x: auto !important; 
@@ -996,9 +978,33 @@ if st.session_state.pagina == "DRE":
                 -webkit-overflow-scrolling: touch !important;
             }}
 
-            .responsive-scroll-yoy table {{
-                display: table !important; /* Mantém comportamento de tabela para respeitar larguras */
+            /* --- MEDIA QUERIES PARA RESPONSIVIDADE --- */
+
+            /* COMPORTAMENTO DESKTOP */
+            @media (min-width: 768px) {{
+                .y-table {{
+                    width: 100% !important;
+                    min-width: 100% !important;
+                }}
+                .responsive-scroll-yoy table {{
+                    display: table !important;
+                }}
             }}
+
+            /* COMPORTAMENTO MOBILE */
+            @media (max-width: 767px) {{
+                .y-table {{ 
+                    width: max-content !important; 
+                    min-width: 900px !important; 
+                }}
+                .responsive-scroll-yoy table {{
+                    display: block !important;
+                }}
+            }}
+
+            .y-yellow {{ background-color: #f0f0f0 !important; font-weight: bold; }} 
+            .y-pct-clean {{ font-weight: normal !important; font-style: italic !important; }} 
+            .h-grp {{ text-align: center !important; font-weight: bold; border-bottom: 2px solid #FFF !important; font-size: 10px; }}
         </style>
         
         <div class="responsive-scroll-yoy">
