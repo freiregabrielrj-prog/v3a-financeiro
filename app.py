@@ -908,7 +908,7 @@ if st.session_state.pagina == "DRE":
     except Exception as e:
         st.error(f"Erro ao processar Margem por Área: {e}")
 
-#====================# QUADRO 03: VISÃO EBITDA YOY 2026 x 2025 (VERSÃO FINAL MOBILE) #====================#
+#====================# QUADRO 03: VISÃO EBITDA YOY 2026 x 2025 #====================#
     
     col_eb_t, col_eb_s = st.columns([3.2, 1], gap="small", vertical_alignment="bottom")
         
@@ -940,61 +940,25 @@ if st.session_state.pagina == "DRE":
     html_yoy = f"""
     <div style="background-color: #FFFFFF; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; padding: 15px; margin-bottom: 0px;">
         <style>
-            /* MUDANÇA CRÍTICA: table-layout auto permite que a tabela cresça lateralmente */
-            .y-table {{ 
-                width: auto !important; 
-                min-width: 1000px; 
-                border-collapse: collapse; 
-                color: #000; 
-                font-size: 11px; 
-                font-family: 'Segoe UI', sans-serif; 
-                table-layout: auto !important; 
-            }} 
+            /* CLINICA QUADRO 04: Fonte reduzida e scroll touch */
+            .y-table {{ width: 100%; border-collapse: collapse; color: #000; font-size: 11px; font-family: 'Segoe UI', sans-serif; table-layout: fixed; }} 
+            .y-table thead tr th {{ background: #1A1A1A; color: #FFF; padding: 8px 2px; text-align: center; white-space: nowrap; }} 
             
-            /* Centralização do Título Categorias */
-            .y-table thead tr th {{ 
-                background: #1A1A1A; 
-                color: #FFF; 
-                padding: 10px 5px; 
-                text-align: center; 
-                white-space: nowrap; 
-            }} 
-            
-            /* Estilo da primeira coluna (Fixa na esquerda) */
-            .y-table thead th:first-child {{ 
-                text-align: center !important; 
-                width: 220px; 
-                position: sticky;
-                left: 0;
-                z-index: 11;
-                background: #1A1A1A;
-            }} 
-            
-            .y-table td {{ padding: 8px 10px; border-bottom: 1px solid #F0F0F0; white-space: nowrap; text-align: center; }} 
-            
-            /* Células da primeira coluna fixas para não perder o contexto ao rolar */
-            .y-table td:first-child {{ 
-                text-align: left; 
-                font-weight: bold; 
-                white-space: normal; 
-                min-width: 210px; 
-                position: sticky;
-                left: 0;
-                background: white;
-                z-index: 10;
-                border-right: 2px solid #F0F0F0;
-                padding-left: 10px;
-            }} 
+            /* Largura da primeira coluna igual ao Top 10 */
+            .y-table thead th:first-child {{ text-align: left !important; width: 160px; white-space: normal; }} 
+            .y-table td {{ padding: 8px 4px; border-bottom: 1px solid #F0F0F0; white-space: nowrap; text-align: center; }} 
+            .y-table td:first-child {{ text-align: left; font-weight: bold; white-space: normal; min-width: 150px; }} 
             
             .y-yellow {{ background-color: #f0f0f0 !important; font-weight: bold; }} 
             .y-pct-clean {{ font-weight: normal !important; font-style: italic !important; }} 
             .h-grp {{ text-align: center !important; font-weight: bold; border-bottom: 2px solid #FFF !important; font-size: 10px; }}
             
+            /* DIV DE SCROLL IGUAL AO QUADRO 04 */
             .responsive-scroll-yoy {{ 
                 width: 100%; 
                 overflow-x: auto !important; 
+                -webkit-overflow-scrolling: touch; 
                 display: block;
-                -webkit-overflow-scrolling: touch;
             }}
         </style>
         
@@ -1115,7 +1079,7 @@ elif st.session_state.pagina == "Orçamento":
         """, unsafe_allow_html=True)
 
 
-#====================# QUADRO 1: ORÇAMENTO YTD - ORÇADO X REALIZADO (VERSÃO FINAL MOBILE) #====================#
+#====================# QUADRO 1: ORÇAMENTO YTD - ORÇADO X REALIZADO (LÓGICA CORRIGIDA) #====================#
     
     st.markdown('<div style="padding-top: 10px;"></div>', unsafe_allow_html=True) 
     col_y_t, col_y_s = st.columns([3.2, 1], vertical_alignment="bottom") 
@@ -1144,63 +1108,15 @@ elif st.session_state.pagina == "Orçamento":
     html_bytd = f"""
     <div style="background-color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; margin-bottom: 40px;">
         <style>
-            /* MUDANÇA CRÍTICA: Desativa o fixed para permitir que a tabela cresça lateralmente */
-            .b-table {{ 
-                width: auto !important; 
-                min-width: 1100px; 
-                border-collapse: collapse; 
-                color: #000; 
-                font-size: 11px; 
-                font-family: 'Segoe UI', sans-serif; 
-                table-layout: auto !important; 
-            }} 
-            
-            .b-table thead th {{ 
-                position: sticky; 
-                top: 0; 
-                z-index: 10; 
-                background: #1A1A1A; 
-                color: #FFF; 
-                padding: 10px 5px; 
-                text-align: center; 
-                white-space: nowrap; 
-            }} 
-            
-            /* Título da primeira coluna fixo na esquerda */
-            .b-table thead th:first-child {{ 
-                text-align: left !important; 
-                width: 180px; 
-                position: sticky;
-                left: 0;
-                z-index: 11;
-                background: #1A1A1A;
-            }} 
-            
-            .b-table td {{ padding: 8px 10px; border-bottom: 1px solid #F0F0F0; white-space: nowrap; text-align: center; }} 
-            
-            /* Células da primeira coluna fixas na esquerda */
-            .b-table td:first-child {{ 
-                text-align: left; 
-                font-weight: bold; 
-                white-space: normal; 
-                min-width: 170px; 
-                position: sticky;
-                left: 0;
-                background: white;
-                z-index: 10;
-                border-right: 2px solid #F0F0F0;
-            }} 
-            
+            .b-table {{ width: 100%; border-collapse: collapse; color: #000; font-size: 11px; font-family: 'Segoe UI', sans-serif; table-layout: fixed; }} 
+            .b-table thead th {{ position: sticky; top: 0; z-index: 10; background: #1A1A1A; color: #FFF; padding: 8px 2px; text-align: center; white-space: nowrap; }} 
+            .b-table thead th:first-child {{ text-align: left !important; width: 160px; white-space: normal; }} 
+            .b-table td {{ padding: 8px 4px; border-bottom: 1px solid #F0F0F0; white-space: nowrap; text-align: center; }} 
+            .b-table td:first-child {{ text-align: left; font-weight: bold; white-space: normal; min-width: 150px; }} 
             .row-pai-estilo {{ background-color: #FFFFFF !important; }} 
             .row-total-final {{ background-color: #f0f0f0 !important; font-weight: bold; color: #000 !important; }} 
             .h-grp {{ text-align: center !important; font-weight: bold; border-bottom: 2px solid #FFF !important; font-size: 10px; }}
-            
-            .responsive-scroll-bytd {{ 
-                width: 100%; 
-                overflow-x: auto !important; 
-                display: block;
-                -webkit-overflow-scrolling: touch; 
-            }}
+            .responsive-scroll-bytd {{ width: 100%; overflow-x: auto !important; -webkit-overflow-scrolling: touch; display: block; }}
         </style>
         
         <div class="responsive-scroll-bytd">
@@ -1224,6 +1140,7 @@ elif st.session_state.pagina == "Orçamento":
         lab_orc = str(row_orc_ytd.iloc[0]).strip()
         if not lab_orc or lab_orc in ["nan", "Orçado", "Gasto"]: continue
         if normalize_id(lab_orc) in p_orc_l_names:
+            # 1. VALORES BASE
             o_m = safe_float(row_orc_ytd.iloc[2])
             r_m = safe_float(row_orc_ytd.iloc[r_idx_ytd_orc])
             o_a = o_m * (idx_y + 1)
@@ -1233,6 +1150,8 @@ elif st.session_state.pagina == "Orçamento":
             
             t_om += o_m; t_rm += r_m; t_oa += o_a; t_ra += r_a; t_ot += o_t; t_rt += r_t
             
+            # 2. LÓGICA DE VARIAÇÃO % (IGUAL DRE/EBITDA): (R - O) / O
+            # Como é DESPESA, multiplicamos por -1 no fmt para que ECONOMIA (Real < Orçado) fique VERDE
             v_m_p = safe_div(r_m - o_m, o_m)
             v_a_p = safe_div(r_a - o_a, o_a)
             v_t_p = safe_div(r_t - o_t, o_t)
@@ -1244,6 +1163,7 @@ elif st.session_state.pagina == "Orçamento":
                 <td>{fmt(o_t)}</td><td>{fmt(r_t)}</td><td>{fmt(o_t-r_t)}</td><td>{fmt(v_t_p * -1, True, True)}</td>
             </tr>"""
 
+    # 3. TOTAIS GERAIS
     gt_vmp = safe_div(t_rm - t_om, t_om)
     gt_vap = safe_div(t_ra - t_oa, t_oa)
     gt_vtp = safe_div(t_rt - t_ot, t_ot)
