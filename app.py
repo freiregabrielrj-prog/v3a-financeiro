@@ -12,26 +12,18 @@ st.set_page_config(page_title="V3A Financeiro", layout="wide", initial_sidebar_s
 # 2. CSS PARA MOBILE (Agora sim o markdown)
 st.markdown("""
     <style>
-    /* Permite rolagem horizontal em blocos de colunas no mobile */
     @media (max-width: 640px) {
+        /* Container das colunas */
         [data-testid="stHorizontalBlock"] {
             display: flex !important;
             flex-direction: row !important;
             overflow-x: auto !important;
-            overflow-y: hidden !important;
-            white-space: nowrap !important;
-            gap: 10px !important;
+            padding-bottom: 10px !important;
         }
-        
-        /* Garante que cada coluna dentro do scroll tenha uma largura mínima */
+        /* Cada coluna individual */
         [data-testid="stColumn"] {
-            min-width: 250px !important; /* Ajuste esse valor conforme o tamanho do seu card */
+            min-width: 300px !important; /* Aumentamos para 300px para dar mais folga */
             flex: 0 0 auto !important;
-        }
-
-        /* Esconde a barra de rolagem para ficar mais limpo (opcional) */
-        [data-testid="stHorizontalBlock"]::-webkit-scrollbar {
-            display: none;
         }
     }
     </style>
