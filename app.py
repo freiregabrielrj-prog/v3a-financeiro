@@ -111,6 +111,9 @@ if not st.session_state.autenticado:
     # Interrompe a execução aqui enquanto não logar
     st.stop()
 
+
+
+
 # =================================================================
 # 3. CARREGAMENTO DE DADOS (Só inicia após o login)
 # =================================================================
@@ -206,37 +209,43 @@ def safe_div(n, d):
     except: return 0.0
 
 # =================================================================
-# 3. CARREGAMENTO DE DADOS (VERSÃO CONSOLIDADA PARA TOOLTIP)
+# 3. CARREGAMENTO DE DADOS (VERSÃO OTIMIZADA PARA VELOCIDADE)
 # =================================================================
 import openpyxl
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=86400)
 def load_all_v3a_data():
     file_path = "dados_dre.xlsx"
+    # Abre o motor do pandas uma vez
     xls = pd.ExcelFile(file_path)
     
     def read_sheet_with_comments(sheet_name, max_cols=18):
         try:
-            wb = openpyxl.load_workbook(file_path, data_only=True)
+            # ADICIONADO: read_only=True e data_only=True para não travar
+            wb = openpyxl.load_workbook(file_path, data_only=True, read_only=True)
             ws = wb[sheet_name]
             data_rows = []
             for row in ws.iter_rows(max_col=max_cols):
                 row_data = []
                 for cell in row:
                     val = cell.value
-                    if cell.comment:
-                        # Limpa o comentário e prepara para o HTML (remove aspas duplas para não quebrar o title)
+                    # Verifica se existe comentário
+                    if hasattr(cell, 'comment') and cell.comment:
                         comment_text = cell.comment.text.strip().replace('\n', ' ').replace('"', "'")
-                        # Armazena como "Valor||Comentario" para separarmos no loop da tabela
                         val = f"{val if val is not None else ''}||{comment_text}"
                     row_data.append(val)
                 data_rows.append(row_data)
             
+            # ADICIONADO: Fecha o arquivo explicitamente
+            wb.close()
+            
             df = pd.DataFrame(data_rows)
-            df.columns = df.iloc[0]
-            return df[1:].reset_index(drop=True)
+            if not df.empty:
+                df.columns = df.iloc[0]
+                return df[1:].reset_index(drop=True)
+            return pd.DataFrame()
         except Exception as e:
-            st.error(f"Erro ao ler comentários: {e}")
+            print(f"Erro ao ler comentários: {e}")
             return pd.DataFrame()
 
     def clean_sheet(name, skip=0, columns=None):
@@ -285,8 +294,12 @@ def load_all_v3a_data():
     abas_extras = {"DRE N1": "DRE N1", "DRE N2": "DRE N2", "DRE N3": "DRE N3", "DRE N4": "DRE N4", 
                    "DRE N5": "DRE N5", "DRE N6": "DRE N6", "DRE N7": "DRE N7", "DRE N8": "DRE N8", 
                    "DRE VENTURES - OUTROS": "DRE VENTURES - OUTROS"}
-    for k, v in abas_extras.items(): dict_res[k] = clean_sheet(v, 3)
+    
+    for k, v in abas_extras.items(): 
+        dict_res[k] = clean_sheet(v, 3)
 
+    # Fecha o motor do pandas
+    xls.close()
     return dict_res
 
 data = load_all_v3a_data()
@@ -359,7 +372,7 @@ st.markdown("""
         display: inline-block !important;
         font-weight: 700; 
         color: var(--text-dark); 
-        font-size: 18px; 
+        font-size: 15px; 
         text-transform: uppercase; 
         font-family: 'Segoe UI';
         line-height: 1 !important;
@@ -601,7 +614,7 @@ if st.session_state.pagina == "DRE":
         """, unsafe_allow_html=True)
 
 
-#====================# QUADRO 1: DRE GERENCIAL (FORMATO IGUAL QUADRO 03) #====================#
+#====================# QUADRO 1: DRE GERENCIAL (VERSÃO OTIMIZADA MOBILE) #====================#
     
     col_dre_t, col_dre_s = st.columns([3.2, 1], gap="small", vertical_alignment="bottom")
 
@@ -623,11 +636,9 @@ if st.session_state.pagina == "DRE":
             "Ventures - Outros": "DRE VENTURES - OUTROS"
         }
         
-        # Sub-colunas para alinhar texto e selectbox (mesmas proporções do Quadro 03)
         c1dre, c2dre, c3dre = st.columns([0.6, 1.2, 1.0], vertical_alignment="bottom")
         
         with c1dre:
-            # Texto alinhado à direita e com o mesmo padding do Quadro 03
             st.markdown('<div style="padding-bottom: 8px; text-align: right;"><span class="periodo-label" style="font-size: 13px;">Núcleo:</span></div>', unsafe_allow_html=True)
         
         with c2dre:
@@ -644,7 +655,6 @@ if st.session_state.pagina == "DRE":
     # --- LÓGICA DE DADOS DA DRE ---
     df_dre = data[aba_selecionada].copy()
     
-    # Normalização dos nomes das colunas
     map_abr_cols = {v: meses_abr[k] for k, v in meses_pt.items()}
     df_dre.columns = [map_abr_cols.get(str(col).strip(), str(col)) for col in df_dre.columns]
 
@@ -654,19 +664,30 @@ if st.session_state.pagina == "DRE":
     # RENDERIZAÇÃO DO HTML
     html_dre = f"""
         {shared_card_style}
-        <div class="v3a-card" style="min-height: 470px; margin-top: 0px;">
+        <div class="v3a-card" style="margin-top: 0px; padding: 15px !important;">
             <style>
-                .v3a-table {{ width: 100%; border-collapse: collapse; color: #000; font-size: 12px; font-family: 'Segoe UI', sans-serif; }} 
-                .v3a-table th {{ position: sticky; top: 0; z-index: 10; background: #1A1A1A; color: #FFF; padding: 12px; text-align: center; white-space: nowrap; }} 
+                /* CLINICA QUADRO 04: Fonte 11px e Scroll Touch */
+                .v3a-table {{ width: 100%; border-collapse: collapse; color: #000; font-size: 11px; font-family: 'Segoe UI', sans-serif; }} 
+                .v3a-table th {{ position: sticky; top: 0; z-index: 10; background: #1A1A1A; color: #FFF; padding: 10px 5px; text-align: center; white-space: nowrap; }} 
                 .v3a-table thead th:first-child {{ text-align: center !important; }}
-                .v3a-table td {{ padding: 8px; border-bottom: 1px solid #F0F0F0; white-space: nowrap; text-align: center; }} 
-                .v3a-table td:first-child {{ text-align: left; min-width: 200px; white-space: normal; font-weight: bold; }} 
+                
+                .v3a-table td {{ padding: 8px 5px; border-bottom: 1px solid #F0F0F0; white-space: nowrap; text-align: center; }} 
+                .v3a-table td:first-child {{ text-align: left; min-width: 170px; white-space: normal; font-weight: bold; }} 
+                
                 .row-parent {{ background-color: #FFFFFF !important; font-weight: bold; cursor: pointer; }} 
                 .row-sub {{ background-color: #FFFFFF !important; font-weight: bold; cursor: pointer; display: none; }} 
                 .row-child-dre {{ background-color: #FFFFFF !important; display: none; }} 
                 .arrow {{ display: inline-block; width: 15px; color: #666; font-size: 10px; }}
-                .indent-sub {{ padding-left: 35px !important; }}
-                .indent-child {{ padding-left: 55px !important; font-weight: normal !important; }}
+                
+                /* Ajuste de identação para mobile: Menos espaço vazio na esquerda */
+                .indent-sub {{ padding-left: 20px !important; }}
+                .indent-child {{ padding-left: 35px !important; font-weight: normal !important; color: #666; }}
+
+                .responsive-scroll-dre {{ 
+                    width: 100%; 
+                    overflow-x: auto !important; 
+                    -webkit-overflow-scrolling: touch; 
+                }}
             </style>
             
             <script>
@@ -693,7 +714,7 @@ if st.session_state.pagina == "DRE":
                 }}
             </script>
             
-            <div class="table-responsive-container">
+            <div class="responsive-scroll-dre">
                 <table class="v3a-table">
                     <thead><tr>"""
 
@@ -718,7 +739,7 @@ if st.session_state.pagina == "DRE":
         elif is_result:
             html_dre += f'<tr style="background-color: #f0f0f0 !important; font-weight: bold;"><td>{desc}</td>'
         elif is_pct:
-            html_dre += f'<tr style="background-color: #FFFFFF !important; font-style: italic;"><td>{desc}</td>'
+            html_dre += f'<tr style="background-color: #FFFFFF !important; font-style: italic; color: #666;"><td>{desc}</td>'
         else:
             cl_cls = f"dre-p2-child-{cp2} dre-neto-of-p1-{cp1}" if p_ctx_h else f"dre-p1-child-{cp1}"
             html_dre += f'<tr class="row-child-dre {cl_cls}"><td class="indent-child">{desc}</td>'
@@ -733,10 +754,10 @@ if st.session_state.pagina == "DRE":
             </div> 
         </div> """
 
-    st.components.v1.html(html_dre, height=550, scrolling=True)
+    st.components.v1.html(html_dre, height=550, scrolling=False)
 
 
-#====================# QUADRO 2: MARGEM BRUTA POR ÁREA 2026 #====================#
+#====================# QUADRO 2: MARGEM BRUTA POR ÁREA 2026 (VERSÃO MOBILE OK) #====================#
     
     st.markdown('<div style="padding-top: 10px;"></div>', unsafe_allow_html=True) 
     st.markdown("""
@@ -747,7 +768,7 @@ if st.session_state.pagina == "DRE":
     """, unsafe_allow_html=True)
 
     try:
-        # 1. Carregamento e Normalização
+        # 1. Carregamento e Normalização (Mantendo sua lógica original)
         df_ma_origem = pd.read_excel("dados_dre.xlsx", sheet_name="Margem por Faixa", skiprows=18)
         df_ma_origem = df_ma_origem.loc[:, ~df_ma_origem.columns.str.contains('^Unnamed')]
 
@@ -755,7 +776,6 @@ if st.session_state.pagina == "DRE":
         c_nuc, c_cli = col_map_ma.get("nucleo"), col_map_ma.get("cliente")
         c_rec, c_imp, c_cus = col_map_ma.get("receitabruta"), col_map_ma.get("imposto"), col_map_ma.get("custo")
 
-        # Limpeza de strings e normalização para busca
         df_ma_origem[c_nuc] = df_ma_origem[c_nuc].astype(str).str.strip()
         df_ma_origem[c_cli] = df_ma_origem[c_cli].astype(str).str.strip()
         df_ma_origem['nuc_norm'] = df_ma_origem[c_nuc].apply(normalize_id)
@@ -763,23 +783,17 @@ if st.session_state.pagina == "DRE":
         for col_f in [c_rec, c_imp, c_cus]:
             df_ma_origem[col_f] = df_ma_origem[col_f].apply(safe_float)
 
-        # Cálculo do Lucro Bruto Real por linha (Receita - Custos - Impostos)
         df_ma_origem['lb_row'] = df_ma_origem[c_rec] - df_ma_origem[c_cus].abs() - df_ma_origem[c_imp].abs()
         
-        # 2. Agrupamento Hierárquico
         nucleos_lista = ["Núcleo 1", "Núcleo 2", "Núcleo 3", "Núcleo 4", "Núcleo 5", "Núcleo 6", "Núcleo 7", "Núcleo 8", "Ventures - outros"]
         dados_hierarquia = {}
 
         for nuc in nucleos_lista:
             n_norm = normalize_id(nuc)
             df_nuc = df_ma_origem[df_ma_origem['nuc_norm'] == n_norm].copy()
-            
-            # Agrupamento por Cliente
             df_cli_group = df_nuc.groupby(c_cli).agg({
                 c_rec: 'sum', c_imp: 'sum', c_cus: 'sum', 'lb_row': 'sum'
             }).reset_index()
-            
-            # Ordenação: Clientes com maior Lucro Bruto ou Receita no topo
             df_cli_group = df_cli_group.sort_values(by=[c_rec, 'lb_row'], ascending=False)
 
             dados_hierarquia[nuc] = {
@@ -790,18 +804,30 @@ if st.session_state.pagina == "DRE":
                 "clientes": df_cli_group.to_dict('records')
             }
 
-        # 3. HTML / CSS / JS
+        # 3. HTML / CSS / JS (APLICANDO A CLÍNICA DO QUADRO 04)
         html_ma = f"""
-        <div style="background-color: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; margin-bottom: 40px;">
+        <div style="background-color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; margin-bottom: 40px;">
             <style>
-                .ma-table {{ width: 100%; border-collapse: collapse; color: #000; font-size: 12px; font-family: 'Segoe UI', sans-serif; }}
-                .ma-table thead th {{ position: sticky; top: 0; z-index: 10; background: #1A1A1A; color: #FFF; padding: 12px; text-align: center; white-space: nowrap; }}
-                .ma-table td {{ padding: 10px; border-bottom: 1px solid #F0F0F0; white-space: nowrap; text-align: center; }}
-                .ma-table td:first-child {{ text-align: left; width: 280px; font-weight: bold; }}
-                .row-cli-ma {{ background-color: #FFFFFF !important; display: none; font-size: 11px; }}
+                /* CLINICA QUADRO 04: Fonte 11px e Scroll Touch */
+                .ma-table {{ width: 100%; border-collapse: collapse; color: #000; font-size: 11px; font-family: 'Segoe UI', sans-serif; }}
+                .ma-table thead th {{ position: sticky; top: 0; z-index: 10; background: #1A1A1A; color: #FFF; padding: 10px 5px; text-align: center; white-space: nowrap; }}
+                
+                /* Controle de largura da primeira coluna */
+                .ma-table td:first-child {{ text-align: left; width: 160px; font-weight: bold; white-space: normal; }}
+                .ma-table td {{ padding: 8px 5px; border-bottom: 1px solid #F0F0F0; white-space: nowrap; text-align: center; }}
+                
+                .row-cli-ma {{ background-color: #FFFFFF !important; display: none; font-size: 10px; color: #666; }}
                 .row-total-final-ma {{ background-color: #f0f0f0 !important; font-weight: bold; color: #000 !important; }}
                 .arr-ma {{ display: inline-block; width: 15px; color: #666; font-size: 10px; transition: 0.2s; }}
-                .indent-cli {{ padding-left: 35px !important; color: #666; font-weight: normal; font-style: italic; }}
+                .indent-cli {{ padding-left: 20px !important; font-weight: normal; font-style: italic; }}
+
+                /* DIV DE SCROLL IGUAL AO QUADRO 04 */
+                .responsive-scroll-ma {{ 
+                    width: 100%; 
+                    overflow-x: auto !important; 
+                    -webkit-overflow-scrolling: touch; 
+                    display: block;
+                }}
             </style>
             
             <script>
@@ -818,18 +844,19 @@ if st.session_state.pagina == "DRE":
                 }}
             </script>
 
-            <table class="ma-table">
-                <thead>
-                    <tr>
-                        <th>Unidade de Negócio / Cliente</th>
-                        <th>Receita Bruta</th>
-                        <th>Custo</th>
-                        <th>Imposto</th>
-                        <th>Lucro Bruto</th>
-                        <th>Margem (%)</th>
-                    </tr>
-                </thead>
-                <tbody>"""
+            <div class="responsive-scroll-ma">
+                <table class="ma-table">
+                    <thead>
+                        <tr>
+                            <th>Unidade / Cliente</th>
+                            <th>Rec. Bruta</th>
+                            <th>Custo</th>
+                            <th>Imposto</th>
+                            <th>Lucro Bruto</th>
+                            <th>Mg (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody>"""
 
         tot_r, tot_c, tot_i, tot_lb = 0.0, 0.0, 0.0, 0.0
 
@@ -838,7 +865,6 @@ if st.session_state.pagina == "DRE":
             mg_n = safe_div(info["lb"], info["receita"])
             tot_r += info["receita"]; tot_c += info["custo"]; tot_i += info["imposto"]; tot_lb += info["lb"]
 
-            # Linha do Núcleo
             html_ma += f"""
             <tr style="background-color: #FFFFFF; cursor: pointer;" onclick="toggleMa({i})">
                 <td><span id="icon-{i}" class="arr-ma">▶</span> {nuc_name}</td>
@@ -849,9 +875,7 @@ if st.session_state.pagina == "DRE":
                 <td>{fmt(mg_n, True)}</td>
             </tr>"""
 
-            # Linhas dos Clientes (REVISADO: Removido filtro de receita zero)
             for cli in info["clientes"]:
-                # Mostra o cliente se houver qualquer valor (Receita, Custo OU Imposto) diferente de zero
                 if abs(cli[c_rec]) > 0.01 or abs(cli[c_cus]) > 0.01 or abs(cli[c_imp]) > 0.01:
                     mg_c = safe_div(cli['lb_row'], cli[c_rec])
                     html_ma += f"""
@@ -864,7 +888,6 @@ if st.session_state.pagina == "DRE":
                         <td>{fmt(mg_c, True)}</td>
                     </tr>"""
 
-        # Total Geral
         tot_mg = safe_div(tot_lb, tot_r)
         html_ma += f"""
                     <tr class="row-total-final-ma">
@@ -877,14 +900,15 @@ if st.session_state.pagina == "DRE":
                     </tr>
                 </tbody>
             </table>
+            </div>
         </div>"""
 
-        st.components.v1.html(html_ma, height=500, scrolling=True)
+        st.components.v1.html(html_ma, height=500, scrolling=False)
 
     except Exception as e:
         st.error(f"Erro ao processar Margem por Área: {e}")
 
-#====================# QUADRO 03: VISÃO EBITDA YOY 2026 x 2025 #====================#
+#====================# QUADRO 03: VISÃO EBITDA YOY 2026 x 2025 (AJUSTE DE LARGURA) #====================#
     
     col_eb_t, col_eb_s = st.columns([3.2, 1], gap="small", vertical_alignment="bottom")
         
@@ -914,37 +938,54 @@ if st.session_state.pagina == "DRE":
     t_parents = ["+ Receita Bruta", "- Imposto IBS CBS (ISS PIS COFINS)", "= Receita Liquida", "- Custo", "= Lucro Bruto", "% Margem Bruta (sem IR e CSLL)", "% Sobre Receita Liquida (sem IR / CSLL)", "- Despesas", "= Ebitda", "% Sobre a Receita Liquida", "- Imposto IR CSLL", "+ - Outras Receitas E Despesas", "- Investimentos", "= Lucro Liquido", "% S/ Rec Liq"]
 
     html_yoy = f"""
-    <div style="background-color: #FFFFFF; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; padding: 20px; margin-bottom: 0px;">
+    <div style="background-color: #FFFFFF; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; padding: 15px; margin-bottom: 0px;">
         <style>
-            .y-table {{ width: 100%; border-collapse: collapse; color: #000; font-size: 12px; font-family: 'Segoe UI', sans-serif; table-layout: fixed; }} 
-            .y-table thead tr th {{ background: #1A1A1A; color: #FFF; padding: 10px 2px; text-align: center; white-space: nowrap; }} 
+            .y-table {{ width: 100%; border-collapse: collapse; color: #000; font-size: 11px; font-family: 'Segoe UI', sans-serif; table-layout: fixed; }} 
+            .y-table thead tr th {{ background: #1A1A1A; color: #FFF; padding: 8px 2px; text-align: center; white-space: nowrap; }} 
             
-            /* CORREÇÃO AQUI: Mudado de left para center */
-            .y-table thead th:first-child {{ text-align: center !important; width: 200px; white-space: normal; }} 
+            /* AJUSTE: Aumento da largura e centralização do título 'Categorias' */
+            .y-table thead th:first-child {{ 
+                text-align: center !important; 
+                width: 220px; 
+                white-space: normal; 
+            }} 
             
-            .y-table td {{ padding: 8px 2px; border-bottom: 1px solid #F0F0F0; white-space: nowrap; text-align: center; }} 
+            .y-table td {{ padding: 8px 4px; border-bottom: 1px solid #F0F0F0; white-space: nowrap; text-align: center; }} 
             
-            /* Mantemos o corpo da tabela (td) à esquerda para leitura das categorias */
-            .y-table td:first-child {{ text-align: left; font-weight: bold; }} 
+            /* AJUSTE: Largura mínima maior para evitar quebra de linha excessiva */
+            .y-table td:first-child {{ 
+                text-align: left; 
+                font-weight: bold; 
+                white-space: normal; 
+                min-width: 210px; 
+                padding-left: 10px;
+            }} 
             
             .y-yellow {{ background-color: #f0f0f0 !important; font-weight: bold; }} 
             .y-pct-clean {{ font-weight: normal !important; font-style: italic !important; }} 
-            .h-grp {{ text-align: center !important; font-weight: bold; border-bottom: 2px solid #FFF !important; }}
+            .h-grp {{ text-align: center !important; font-weight: bold; border-bottom: 2px solid #FFF !important; font-size: 10px; }}
+            
+            .responsive-scroll-yoy {{ 
+                width: 100%; 
+                overflow-x: auto !important; 
+                -webkit-overflow-scrolling: touch; 
+                display: block;
+            }}
         </style>
         
-        <div class="table-responsive-container">
+        <div class="responsive-scroll-yoy">
             <table class="y-table">
                 <thead>
                     <tr>
                         <th rowspan="2">Categorias</th>
                         <th colspan="4" class="h-grp" style="background:#333;">MÊS {mes_eb.upper()}</th>
-                        <th colspan="4" class="h-grp" style="background:#444;">ACUMULADO ATÉ {mes_eb.upper()}</th>
+                        <th colspan="4" class="h-grp" style="background:#444;">ACUM. {mes_eb.upper()}</th>
                         <th colspan="4" class="h-grp" style="background:#555;">TOTAL ANO</th>
                     </tr>
                     <tr>
-                        <th style="text-align: center;">2026</th><th>2025</th><th>Var $</th><th>Var %</th>
-                        <th>2026</th><th>2025</th><th>Var $</th><th>Var %</th>
-                        <th>2026</th><th>2025</th><th>Var $</th><th>Var %</th>
+                        <th style="text-align: center;">26</th><th>25</th><th>$</th><th>%</th>
+                        <th>26</th><th>25</th><th>$</th><th>%</th>
+                        <th>26</th><th>25</th><th>$</th><th>%</th>
                     </tr>
                 </thead>
                 <tbody>"""
@@ -969,6 +1010,7 @@ if st.session_state.pagina == "DRE":
             
             cls_eb = "y-yellow" if nm_eb.startswith('=') else ""
             if is_p_eb: cls_eb += " y-pct-clean"
+            
             html_yoy += f"""<tr class="{cls_eb}"><td>{nm_eb}</td><td>{fmt(f26, is_p_eb)}</td><td>{fmt(f25, is_p_eb)}</td><td>{vfn}</td><td>{vfp}</td><td>{fmt(a26, is_p_eb)}</td><td>{fmt(a25, is_p_eb)}</td><td>{van}</td><td>{vap}</td><td>{fmt(t26, is_p_eb)}</td><td>{fmt(t25, is_p_eb)}</td><td>{vtn}</td><td>{vtp}</td></tr>"""
         except:
             continue
@@ -976,10 +1018,13 @@ if st.session_state.pagina == "DRE":
     html_yoy += """
                 </tbody>
             </table>
-        </div> </div>
+        </div> 
+    </div>
     """
 
     st.components.v1.html(html_yoy, height=630, scrolling=False)
+    
+    
 
     # --- POSIÇÃO 1: OBSERVAÇÕES DRE GERENCIAL (LÊ COLUNA B) ---
     st.markdown('<div style="margin-top: 40px;">' + render_obs_card(pd.DataFrame({"DRE Gerencial": data["OBS_DRE"]}), "DRE Gerencial") + '</div>', unsafe_allow_html=True)
@@ -1045,9 +1090,8 @@ elif st.session_state.pagina == "Orçamento":
         """, unsafe_allow_html=True)
 
 
-#====================# QUADRO 1: ORÇAMENTO YTD - ORÇADO X REALIZADO #====================#
+#====================# QUADRO 1: ORÇAMENTO YTD - ORÇADO X REALIZADO (LÓGICA CORRIGIDA) #====================#
     
-    # Reduzi o padding de 40px para 10px para melhorar o espaçamento que discutimos
     st.markdown('<div style="padding-top: 10px;"></div>', unsafe_allow_html=True) 
     col_y_t, col_y_s = st.columns([3.2, 1], vertical_alignment="bottom") 
 
@@ -1055,12 +1099,10 @@ elif st.session_state.pagina == "Orçamento":
         st.markdown('<div class="header-container" style="margin-top: 0px; padding-top: 0px; margin-bottom: 5px;"><div class="quadro-num">01.</div><div class="quadro-titulo">Orçamento YTD - Orçado x Realizado</div></div>', unsafe_allow_html=True)
 
     with col_y_s:
-        # Ajustei as proporções das colunas para o selectbox não ficar tão largo
         c_label_orc, c_select_orc, c_spacer = st.columns([0.6, 1.2, 1.0], vertical_alignment="bottom")
         with c_label_orc:
             st.markdown('<div style="padding-bottom: 8px; text-align: right;"><span class="periodo-label">Período:</span></div>', unsafe_allow_html=True)
         with c_select_orc:
-            # AJUSTE AQUI: index=index_fechamento e key dinâmica
             mes_ytd = st.selectbox(
                 "", 
                 meses_lista_full, 
@@ -1074,72 +1116,119 @@ elif st.session_state.pagina == "Orçamento":
     t_om, t_rm, t_oa, t_ra, t_ot, t_rt = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
     p_orc_l_names = ["genteegestao", "financeiro", "diretoria", "comunicacao", "comercial", "operacoes", "ventures", "ondemand"]
 
-    html_bytd = f"""<div style="background-color: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; margin-bottom: 40px;">
+    html_bytd = f"""
+    <div style="background-color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; margin-bottom: 40px;">
         <style>
-            .b-table {{ width: 100%; border-collapse: collapse; color: #000; font-size: 12px; font-family: 'Segoe UI', sans-serif; }} 
-            .b-table thead th {{ position: sticky; top: 0; z-index: 10; background: #1A1A1A; color: #FFF; padding: 12px; text-align: center; white-space: nowrap; }} 
-            .b-table td {{ padding: 10px; border-bottom: 1px solid #F0F0F0; white-space: nowrap; text-align: center; }} 
-            .b-table td:first-child {{ text-align: left; width: 280px; font-weight: bold; }} 
+            .b-table {{ width: 100%; border-collapse: collapse; color: #000; font-size: 11px; font-family: 'Segoe UI', sans-serif; table-layout: fixed; }} 
+            .b-table thead th {{ position: sticky; top: 0; z-index: 10; background: #1A1A1A; color: #FFF; padding: 8px 2px; text-align: center; white-space: nowrap; }} 
+            .b-table thead th:first-child {{ text-align: left !important; width: 160px; white-space: normal; }} 
+            .b-table td {{ padding: 8px 4px; border-bottom: 1px solid #F0F0F0; white-space: nowrap; text-align: center; }} 
+            .b-table td:first-child {{ text-align: left; font-weight: bold; white-space: normal; min-width: 150px; }} 
             .row-pai-estilo {{ background-color: #FFFFFF !important; }} 
             .row-total-final {{ background-color: #f0f0f0 !important; font-weight: bold; color: #000 !important; }} 
-            .h-grp {{ text-align: center !important; font-weight: bold; border-bottom: 2px solid #FFF !important; }}
+            .h-grp {{ text-align: center !important; font-weight: bold; border-bottom: 2px solid #FFF !important; font-size: 10px; }}
+            .responsive-scroll-bytd {{ width: 100%; overflow-x: auto !important; -webkit-overflow-scrolling: touch; display: block; }}
         </style>
-        <table class="b-table">
-            <thead>
-                <tr>
-                    <th rowspan="2">Centro de Custo</th>
-                    <th colspan="4" class="h-grp" style="background:#333;">MÊS {mes_ytd.upper()}</th>
-                    <th colspan="4" class="h-grp" style="background:#444;">ACUMULADO ATÉ {mes_ytd.upper()}</th>
-                    <th colspan="4" class="h-grp" style="background:#555;">TOTAL ANO</th>
-                </tr>
-                <tr>
-                    <th>Orçado</th><th>Realizado</th><th>Var $</th><th>Var %</th>
-                    <th>Orçado</th><th>Realizado</th><th>Var $</th><th>Var %</th>
-                    <th>Orçado</th><th>Realizado</th><th>Var $</th><th>Var %</th>
-                </tr>
-            </thead>
-            <tbody>"""
+        
+        <div class="responsive-scroll-bytd">
+            <table class="b-table">
+                <thead>
+                    <tr>
+                        <th rowspan="2">Centro de Custo</th>
+                        <th colspan="4" class="h-grp" style="background:#333;">MÊS {mes_ytd[:3].upper()}</th>
+                        <th colspan="4" class="h-grp" style="background:#444;">ACUM. {mes_ytd[:3].upper()}</th>
+                        <th colspan="4" class="h-grp" style="background:#555;">TOTAL ANO</th>
+                    </tr>
+                    <tr>
+                        <th>Orç.</th><th>Real.</th><th>$</th><th>%</th>
+                        <th>Orç.</th><th>Real.</th><th>$</th><th>%</th>
+                        <th>Orç.</th><th>Real.</th><th>$</th><th>%</th>
+                    </tr>
+                </thead>
+                <tbody>"""
 
     for _, row_orc_ytd in df_raw_orc_data.iterrows():
         lab_orc = str(row_orc_ytd.iloc[0]).strip()
         if not lab_orc or lab_orc in ["nan", "Orçado", "Gasto"]: continue
         if normalize_id(lab_orc) in p_orc_l_names:
-            o_m_orc = safe_float(row_orc_ytd.iloc[2]); r_m_orc = safe_float(row_orc_ytd.iloc[r_idx_ytd_orc]); o_a_orc = o_m_orc * (idx_y + 1); r_a_orc = sum([safe_float(v_orc) for v_orc in row_orc_ytd.iloc[6 : r_idx_ytd_orc+1]]); o_t_orc, r_t_orc = safe_float(row_orc_ytd.iloc[1]), safe_float(row_orc_ytd.iloc[3])
-            t_om += o_m_orc; t_rm += r_m_orc; t_oa += o_a_orc; t_ra += r_a_orc; t_ot += o_t_orc; t_rt += r_t_orc
-            vm_p_orc = (r_m_orc / o_m_orc) - 1 if o_m_orc != 0 else 0; va_p_orc = (r_a_orc / o_a_orc) - 1 if o_a_orc != 0 else 0; vt_p_orc = (r_t_orc / o_t_orc) - 1 if o_t_orc != 0 else 0
-            html_bytd += f"""<tr class="row-pai-estilo"><td>{lab_orc}</td><td>{fmt(o_m_orc)}</td><td>{fmt(r_m_orc)}</td><td>{fmt(o_m_orc-r_m_orc)}</td><td>{fmt(vm_p_orc, True, True)}</td><td>{fmt(o_a_orc)}</td><td>{fmt(r_a_orc)}</td><td>{fmt(o_a_orc-r_a_orc)}</td><td>{fmt(va_p_orc, True, True)}</td><td>{fmt(o_t_orc)}</td><td>{fmt(r_t_orc)}</td><td>{fmt(o_t_orc-r_t_orc)}</td><td>{fmt(vt_p_orc, True, True)}</td></tr>"""
+            # 1. VALORES BASE
+            o_m = safe_float(row_orc_ytd.iloc[2])
+            r_m = safe_float(row_orc_ytd.iloc[r_idx_ytd_orc])
+            o_a = o_m * (idx_y + 1)
+            r_a = sum([safe_float(v) for v in row_orc_ytd.iloc[6 : r_idx_ytd_orc+1]])
+            o_t = safe_float(row_orc_ytd.iloc[1])
+            r_t = safe_float(row_orc_ytd.iloc[3])
+            
+            t_om += o_m; t_rm += r_m; t_oa += o_a; t_ra += r_a; t_ot += o_t; t_rt += r_t
+            
+            # 2. LÓGICA DE VARIAÇÃO % (IGUAL DRE/EBITDA): (R - O) / O
+            # Como é DESPESA, multiplicamos por -1 no fmt para que ECONOMIA (Real < Orçado) fique VERDE
+            v_m_p = safe_div(r_m - o_m, o_m)
+            v_a_p = safe_div(r_a - o_a, o_a)
+            v_t_p = safe_div(r_t - o_t, o_t)
+            
+            html_bytd += f"""<tr class="row-pai-estilo">
+                <td>{lab_orc}</td>
+                <td>{fmt(o_m)}</td><td>{fmt(r_m)}</td><td>{fmt(o_m-r_m)}</td><td>{fmt(v_m_p * -1, True, True)}</td>
+                <td>{fmt(o_a)}</td><td>{fmt(r_a)}</td><td>{fmt(o_a-r_a)}</td><td>{fmt(v_a_p * -1, True, True)}</td>
+                <td>{fmt(o_t)}</td><td>{fmt(r_t)}</td><td>{fmt(o_t-r_t)}</td><td>{fmt(v_t_p * -1, True, True)}</td>
+            </tr>"""
 
-    gt_vmp_orc = (t_rm / t_om) - 1 if t_om != 0 else 0; gt_vap_orc = (t_ra / t_oa) - 1 if t_oa != 0 else 0; gt_vtp_orc = (t_rt / t_ot) - 1 if t_ot != 0 else 0
-    html_bytd += f"""<tr class="row-total-final"><td>TOTAL GERAL</td><td>{fmt(t_om)}</td><td>{fmt(t_rm)}</td><td>{fmt(t_om-t_rm)}</td><td>{fmt(gt_vmp_orc, True, True)}</td><td>{fmt(t_oa)}</td><td>{fmt(t_ra)}</td><td>{fmt(t_oa-t_ra)}</td><td>{fmt(gt_vap_orc, True, True)}</td><td>{fmt(t_ot)}</td><td>{fmt(t_rt)}</td><td>{fmt(t_ot-t_rt)}</td><td>{fmt(gt_vtp_orc, True, True)}</td></tr></tbody></table></div>"""
+    # 3. TOTAIS GERAIS
+    gt_vmp = safe_div(t_rm - t_om, t_om)
+    gt_vap = safe_div(t_ra - t_oa, t_oa)
+    gt_vtp = safe_div(t_rt - t_ot, t_ot)
     
-    # Renderização da tabela
+    html_bytd += f"""<tr class="row-total-final">
+        <td>TOTAL GERAL</td>
+        <td>{fmt(t_om)}</td><td>{fmt(t_rm)}</td><td>{fmt(t_om-t_rm)}</td><td>{fmt(gt_vmp * -1, True, True)}</td>
+        <td>{fmt(t_oa)}</td><td>{fmt(t_ra)}</td><td>{fmt(t_oa-t_ra)}</td><td>{fmt(gt_vap * -1, True, True)}</td>
+        <td>{fmt(t_ot)}</td><td>{fmt(t_rt)}</td><td>{fmt(t_ot-t_rt)}</td><td>{fmt(gt_vtp * -1, True, True)}</td>
+    </tr></tbody></table></div></div>"""
+    
     st.components.v1.html(html_bytd, height=500, scrolling=False)
-
-#====================# QUADRO 2: ORÇAMENTO ANUAL (COM TOOLTIPS) #====================#
     
-    st.markdown('<div class="header-container" style="margin-top: 0px;"><div class="quadro-num">02.</div><div class="quadro-titulo">Orçamento Anual</div></div>', unsafe_allow_html=True)
+    
+    
+
+#====================# QUADRO 2: ORÇAMENTO ANUAL (VERSÃO MOBILE OK + TOOLTIPS) #====================#
+    
+    st.markdown('<div class="header-container" style="margin-top: 20px;"><div class="quadro-num">02.</div><div class="quadro-titulo">Orçamento Anual</div></div>', unsafe_allow_html=True)
     
     df_o_a_orc = data["ORC_ANUAL"].copy()
     
-    # Ajuste de nomes de colunas (datas para meses abr)
-    df_o_a_orc.columns = [meses_abr.get(pd.to_datetime(c_val).month, str(c_val)) if isinstance(c_val, datetime) else str(c_val) for c_val in df_o_a_orc.columns]
+    # Ajuste de nomes de colunas para serem curtos (Mobile First)
+    df_o_a_orc.columns = [meses_abr.get(pd.to_datetime(c_val).month, str(c_val)).upper() if isinstance(c_val, datetime) else str(c_val) for c_val in df_o_a_orc.columns]
         
     html_orc_final = f"""
-        <div style="background-color: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; margin-bottom: 40px;">
+        <div style="background-color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; margin-bottom: 40px;">
             <style>
-                .v3a-table-o {{ width: 100%; border-collapse: collapse; color: #000; font-size: 12px; font-family: 'Segoe UI', sans-serif; }} 
-                .v3a-table-o thead th {{ position: sticky; top: 0; z-index: 10; background: #1A1A1A; color: #FFF; padding: 12px; text-align: center; white-space: nowrap; }} 
-                .v3a-table-o td {{ padding: 10px; border-bottom: 1px solid #F0F0F0; white-space: nowrap; text-align: center; }} 
-                .v3a-table-o td:first-child {{ text-align: left; width: 280px; font-weight: bold; }} 
+                /* CLINICA QUADRO 04: Fonte 11px e Scroll Touch */
+                .v3a-table-o {{ width: 100%; border-collapse: collapse; color: #000; font-size: 11px; font-family: 'Segoe UI', sans-serif; }} 
+                .v3a-table-o thead th {{ position: sticky; top: 0; z-index: 10; background: #1A1A1A; color: #FFF; padding: 10px 4px; text-align: center; white-space: nowrap; }} 
+                
+                /* Controle de largura da primeira coluna para não espremer no mobile */
+                .v3a-table-o td:first-child {{ text-align: left; width: 180px; font-weight: bold; white-space: normal; }} 
+                .v3a-table-o td {{ padding: 8px 4px; border-bottom: 1px solid #F0F0F0; white-space: nowrap; text-align: center; }} 
+                
                 .row-p1-orc {{ background-color: #FFFFFF !important; font-weight: bold; cursor: pointer; }} 
                 .row-p2-orc {{ background-color: #FFFFFF !important; font-weight: bold; cursor: pointer; display: none; }} 
                 .row-child-o-orc {{ background-color: #FFFFFF !important; display: none; }} 
-                .arrow-o-orc {{ display: inline-block; width: 15px; color: #666; font-size: 10px; }}
-                .indent-orc-p2 {{ padding-left: 35px !important; font-weight: normal !important; }}
-                .indent-orc-neta {{ padding-left: 55px !important; font-weight: normal !important; font-style: italic; color: #444; }}
+                .arrow-o-orc {{ display: inline-block; width: 15px; color: #B8860B; font-size: 10px; }}
                 
-                /* Estilo para indicar que a célula tem comentário */
-                .has-tooltip {{ border-bottom: 1px dotted #666; cursor: help; display: inline-block; }}
+                /* Indentação Mobile First (Reduzida) */
+                .indent-orc-p2 {{ padding-left: 20px !important; font-weight: normal !important; }}
+                .indent-orc-neta {{ padding-left: 35px !important; font-weight: normal !important; font-style: italic; color: #666; font-size: 10px; }}
+                
+                .has-tooltip {{ border-bottom: 1px dotted #B8860B; cursor: help; display: inline-block; }}
+
+                /* DIV DE SCROLL TOUCH SUAVE */
+                .responsive-scroll-anual {{ 
+                    width: 100%; 
+                    overflow-x: auto !important; 
+                    -webkit-overflow-scrolling: touch; 
+                    display: block;
+                }}
             </style>
             
             <script>
@@ -1159,8 +1248,9 @@ elif st.session_state.pagina == "Orçamento":
                 }}
             </script>
             
-            <table class="v3a-table-o">
-                <thead><tr>"""
+            <div class="responsive-scroll-anual">
+                <table class="v3a-table-o">
+                    <thead><tr>"""
         
     for col_o in df_o_a_orc.columns: 
         html_orc_final += f"<th>{col_o}</th>"
@@ -1172,7 +1262,6 @@ elif st.session_state.pagina == "Orçamento":
         dr_orc = str(row_o_vals.iloc[0]).strip()
         dn_orc = normalize_id(dr_orc)
         
-        # Início da linha baseado na hierarquia
         if dn_orc in p_orc_l_names:
             cp1o_orc += 1
             html_orc_final += f'<tr class="row-p1-orc" onclick="toggleOrc({cp1o_orc}, \'p1\')"><td><span id="ao-{cp1o_orc}p1" class="arrow-o-orc">▶</span> {dr_orc}</td>'
@@ -1182,27 +1271,18 @@ elif st.session_state.pagina == "Orçamento":
         else:
             html_orc_final += f'<tr class="row-child-o-orc p2-child-of-{cp2o_orc} neto-of-p1-{cp1o_orc}"><td class="indent-orc-neta">{dr_orc}</td>'
         
-        # LOOP DE COLUNAS DE VALORES (TRATANDO TOOLTIPS)
         for j_o, v_o_cell in enumerate(row_o_vals[1:]):
             is_pct_col_o = (j_o == 4) 
-            
             tooltip_txt = ""
             valor_para_formatar = v_o_cell
             
-            # Verifica se o valor traz a marcação de comentário vinda do carregamento
             if isinstance(v_o_cell, str) and "||" in v_o_cell:
                 partes = v_o_cell.split("||")
                 valor_para_formatar = partes[0] if partes[0] != "" else 0
                 tooltip_txt = partes[1]
 
-            # Formatação numérica
-            if is_pct_col_o:
-                v_num = safe_float(valor_para_formatar) * -1
-                val_formatado = fmt(v_num, is_pct=True, is_variance_col=True)
-            else:
-                val_formatado = fmt(valor_para_formatar)
+            val_formatado = fmt(safe_float(valor_para_formatar) * -1, is_pct=True, is_variance_col=True) if is_pct_col_o else fmt(valor_para_formatar)
             
-            # Renderização da célula com ou sem balãozinho
             if tooltip_txt:
                 html_orc_final += f'<td title="{tooltip_txt}"><span class="has-tooltip">{val_formatado} 💬</span></td>'
             else:
@@ -1210,9 +1290,10 @@ elif st.session_state.pagina == "Orçamento":
         
         html_orc_final += '</tr>'
             
-    html_orc_final += "</tbody></table></div>"
+    html_orc_final += "</tbody></table></div></div>"
     
-    st.components.v1.html(html_orc_final, height=500, scrolling=True)
+    st.components.v1.html(html_orc_final, height=500, scrolling=False)
+    
     
     #====================# QUADRO 3: DASHBOARD ORÇADO X REALIZADO #====================#
     
