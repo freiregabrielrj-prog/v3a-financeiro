@@ -6,30 +6,10 @@ import plotly.graph_objects as go
 import openpyxl
 import base64
 
-# 1. CONFIGURAÇÃO DE PÁGINA (Sempre o PRIMEIRO comando st)
+# 1. CONFIGURAÇÃO DE PÁGINA (Deve ser o primeiro comando Streamlit)
 st.set_page_config(page_title="V3A Financeiro", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. CSS PARA MOBILE (Agora sim o markdown)
-st.markdown("""
-    <style>
-    @media (max-width: 640px) {
-        /* Container das colunas */
-        [data-testid="stHorizontalBlock"] {
-            display: flex !important;
-            flex-direction: row !important;
-            overflow-x: auto !important;
-            padding-bottom: 10px !important;
-        }
-        /* Cada coluna individual */
-        [data-testid="stColumn"] {
-            min-width: 300px !important; /* Aumentamos para 300px para dar mais folga */
-            flex: 0 0 auto !important;
-        }
-    }
-    </style>
-""", unsafe_allow_html=True)
 
-# 3. SISTEMA DE ACESSO (LOGIN)...
 
 
 # =================================================================
