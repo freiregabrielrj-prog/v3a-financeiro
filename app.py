@@ -949,11 +949,12 @@ if st.session_state.pagina == "DRE":
                 table-layout: auto !important;
             }} 
             
+            /* CENTRALIZAÇÃO DE TODOS OS TÍTULOS (CABEÇALHOS) */
             .y-table thead tr th {{ 
                 background: #1A1A1A; 
                 color: #FFF; 
                 padding: 8px 10px; 
-                text-align: center; 
+                text-align: center !important; 
                 white-space: nowrap; 
             }} 
             
@@ -961,12 +962,20 @@ if st.session_state.pagina == "DRE":
 
             /* CONFIGURAÇÃO DAS COLUNAS */
             .y-table th, .y-table td {{ white-space: nowrap; min-width: 75px; }}
-            .y-table th:first-child, .y-table td:first-child {{ 
-                text-align: left !important; 
+            
+            /* PRIMEIRA COLUNA: Título centralizado e Células à esquerda */
+            .y-table thead th:first-child {{ 
+                text-align: center !important; 
                 width: 220px !important; 
                 min-width: 200px !important;
                 white-space: normal !important; 
-                font-weight: bold;
+            }} 
+            
+            .y-table td:first-child {{ 
+                text-align: left !important; 
+                font-weight: bold; 
+                white-space: normal !important; 
+                min-width: 200px !important; 
             }} 
 
             /* CONTAINER DE SCROLL */
@@ -1124,7 +1133,7 @@ elif st.session_state.pagina == "Orçamento":
         """, unsafe_allow_html=True)
 
 
-#====================# QUADRO 1: ORÇAMENTO YTD - ORÇADO X REALIZADO (LÓGICA CORRIGIDA) #====================#
+#====================# QUADRO 1: ORÇAMENTO YTD - ORÇADO X REALIZADO (RESPONSIVIDADE CORRIGIDA) #====================#
     
     st.markdown('<div style="padding-top: 10px;"></div>', unsafe_allow_html=True) 
     col_y_t, col_y_s = st.columns([3.2, 1], vertical_alignment="bottom") 
@@ -1153,15 +1162,82 @@ elif st.session_state.pagina == "Orçamento":
     html_bytd = f"""
     <div style="background-color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; margin-bottom: 40px;">
         <style>
-            .b-table {{ width: 100%; border-collapse: collapse; color: #000; font-size: 11px; font-family: 'Segoe UI', sans-serif; table-layout: fixed; }} 
-            .b-table thead th {{ position: sticky; top: 0; z-index: 10; background: #1A1A1A; color: #FFF; padding: 8px 2px; text-align: center; white-space: nowrap; }} 
-            .b-table thead th:first-child {{ text-align: left !important; width: 160px; white-space: normal; }} 
-            .b-table td {{ padding: 8px 4px; border-bottom: 1px solid #F0F0F0; white-space: nowrap; text-align: center; }} 
-            .b-table td:first-child {{ text-align: left; font-weight: bold; white-space: normal; min-width: 150px; }} 
+            /* CONFIGURAÇÃO BASE DA TABELA */
+            .b-table {{ 
+                border-collapse: collapse; 
+                color: #000; 
+                font-size: 11px; 
+                font-family: 'Segoe UI', sans-serif; 
+                table-layout: auto !important; /* REMOVIDO FIXED */
+            }} 
+            
+            /* CENTRALIZAÇÃO DOS TÍTULOS */
+            .b-table thead tr th {{ 
+                background: #1A1A1A; 
+                color: #FFF; 
+                padding: 8px 10px; 
+                text-align: center !important; 
+                white-space: nowrap; 
+            }} 
+            
+            .b-table td {{ padding: 8px 10px; border-bottom: 1px solid #F0F0F0; text-align: center; }} 
+
+            /* FORÇAR COLUNAS A NÃO ENCOLHER */
+            .b-table th, .b-table td {{ white-space: nowrap; min-width: 75px; }}
+
+            /* PRIMEIRA COLUNA (CENTRO DE CUSTO) MAIOR E FLEXÍVEL */
+            .b-table thead th:first-child {{ 
+                text-align: center !important; 
+                width: 200px !important; 
+                min-width: 180px !important;
+                white-space: normal !important; 
+            }} 
+            
+            .b-table td:first-child {{ 
+                text-align: left !important; 
+                font-weight: bold; 
+                white-space: normal !important; 
+                min-width: 180px !important; 
+            }} 
+
+            /* CONTAINER DE SCROLL */
+            .responsive-scroll-bytd {{ 
+                width: 100% !important; 
+                overflow-x: auto !important; 
+                overflow-y: hidden !important;
+                display: block !important;
+                -webkit-overflow-scrolling: touch !important;
+            }}
+
+            /* --- COMPORTAMENTO DESKTOP --- */
+            @media (min-width: 768px) {{
+                .b-table {{
+                    width: 100% !important;
+                    min-width: 100% !important;
+                }}
+                .responsive-scroll-bytd table {{
+                    display: table !important;
+                }}
+            }}
+
+            /* --- COMPORTAMENTO MOBILE --- */
+            @media (max-width: 767px) {{
+                .b-table {{ 
+                    width: max-content !important; 
+                    min-width: 1000px !important; 
+                }}
+                .responsive-scroll-bytd table {{
+                    display: block !important;
+                }}
+            }}
+
             .row-pai-estilo {{ background-color: #FFFFFF !important; }} 
+            
+            /* LINHA DE TOTAL - FUNDO NUVEM */
             .row-total-final {{ background-color: #f0f0f0 !important; font-weight: bold; color: #000 !important; }} 
+            .row-total-final td {{ background-color: #f0f0f0 !important; }}
+
             .h-grp {{ text-align: center !important; font-weight: bold; border-bottom: 2px solid #FFF !important; font-size: 10px; }}
-            .responsive-scroll-bytd {{ width: 100%; overflow-x: auto !important; -webkit-overflow-scrolling: touch; display: block; }}
         </style>
         
         <div class="responsive-scroll-bytd">
@@ -1185,7 +1261,6 @@ elif st.session_state.pagina == "Orçamento":
         lab_orc = str(row_orc_ytd.iloc[0]).strip()
         if not lab_orc or lab_orc in ["nan", "Orçado", "Gasto"]: continue
         if normalize_id(lab_orc) in p_orc_l_names:
-            # 1. VALORES BASE
             o_m = safe_float(row_orc_ytd.iloc[2])
             r_m = safe_float(row_orc_ytd.iloc[r_idx_ytd_orc])
             o_a = o_m * (idx_y + 1)
@@ -1195,8 +1270,6 @@ elif st.session_state.pagina == "Orçamento":
             
             t_om += o_m; t_rm += r_m; t_oa += o_a; t_ra += r_a; t_ot += o_t; t_rt += r_t
             
-            # 2. LÓGICA DE VARIAÇÃO % (IGUAL DRE/EBITDA): (R - O) / O
-            # Como é DESPESA, multiplicamos por -1 no fmt para que ECONOMIA (Real < Orçado) fique VERDE
             v_m_p = safe_div(r_m - o_m, o_m)
             v_a_p = safe_div(r_a - o_a, o_a)
             v_t_p = safe_div(r_t - o_t, o_t)
@@ -1208,7 +1281,6 @@ elif st.session_state.pagina == "Orçamento":
                 <td>{fmt(o_t)}</td><td>{fmt(r_t)}</td><td>{fmt(o_t-r_t)}</td><td>{fmt(v_t_p * -1, True, True)}</td>
             </tr>"""
 
-    # 3. TOTAIS GERAIS
     gt_vmp = safe_div(t_rm - t_om, t_om)
     gt_vap = safe_div(t_ra - t_oa, t_oa)
     gt_vtp = safe_div(t_rt - t_ot, t_ot)
