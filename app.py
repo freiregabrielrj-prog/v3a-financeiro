@@ -523,7 +523,7 @@ try:
         f'  <div style="display: flex; align-items: center; gap: 20px; padding: 0px 0 5px 0; margin-top: -10px;">' # margin-top negativa para subir
         f'    {logo_html}'
         f'    <div style="display: flex; flex-direction: column; justify-content: center; margin: 0; padding: 0;">'
-        f'      <h1 style="color: #636466; font-family: \'Segoe UI\', sans-serif; font-size: 26px; font-weight: 650; text-transform: uppercase; margin: 0; padding: 0; line-height: 1.1;">'
+        f'      <h1 style="color: #636466; font-family: \'Segoe UI\', sans-serif; font-size: 20px; font-weight: 650; text-transform: uppercase; margin: 0; padding: 0; line-height: 1.1;">'
         f'Painel Executivo Financeiro</h1>'
         f'      <p style="color: #666666; font-family: \'Segoe UI\', sans-serif; font-size: 12px; margin: 4px 0 0 0; padding: 0; font-weight: 300;">'
         f'{data_att}</p>'
@@ -940,25 +940,64 @@ if st.session_state.pagina == "DRE":
     html_yoy = f"""
     <div style="background-color: #FFFFFF; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; padding: 15px; margin-bottom: 0px;">
         <style>
-            /* CLINICA QUADRO 04: Fonte reduzida e scroll touch */
-            .y-table {{ width: 100%; border-collapse: collapse; color: #000; font-size: 11px; font-family: 'Segoe UI', sans-serif; table-layout: fixed; }} 
-            .y-table thead tr th {{ background: #1A1A1A; color: #FFF; padding: 8px 2px; text-align: center; white-space: nowrap; }} 
+            /* AJUSTE DE RESPONSIVIDADE */
+            .y-table {{ 
+                width: max-content !important; 
+                min-width: 950px; 
+                border-collapse: collapse; 
+                color: #000; 
+                font-size: 11px; 
+                font-family: 'Segoe UI', sans-serif; 
+                table-layout: auto !important; /* REMOVIDO FIXED */
+            }} 
             
-            /* Largura da primeira coluna igual ao Top 10 */
-            .y-table thead th:first-child {{ text-align: left !important; width: 160px; white-space: normal; }} 
-            .y-table td {{ padding: 8px 4px; border-bottom: 1px solid #F0F0F0; white-space: nowrap; text-align: center; }} 
-            .y-table td:first-child {{ text-align: left; font-weight: bold; white-space: normal; min-width: 150px; }} 
+            .y-table thead tr th {{ 
+                background: #1A1A1A; 
+                color: #FFF; 
+                padding: 8px 10px; 
+                text-align: center; 
+                white-space: nowrap; 
+            }} 
+            
+            /* FORÇAR COLUNAS A NÃO ENCOLHER */
+            .y-table th, 
+            .y-table td {{ 
+                white-space: nowrap; 
+                min-width: 75px; 
+            }}
+
+            /* PRIMEIRA COLUNA (CATEGORIAS) MAIOR E FLEXÍVEL */
+            .y-table thead th:first-child {{ 
+                text-align: left !important; 
+                width: 220px !important; 
+                min-width: 200px !important;
+                white-space: normal !important; 
+            }} 
+            
+            .y-table td {{ padding: 8px 10px; border-bottom: 1px solid #F0F0F0; text-align: center; }} 
+            
+            .y-table td:first-child {{ 
+                text-align: left; 
+                font-weight: bold; 
+                white-space: normal !important; 
+                min-width: 200px !important; 
+            }} 
             
             .y-yellow {{ background-color: #f0f0f0 !important; font-weight: bold; }} 
             .y-pct-clean {{ font-weight: normal !important; font-style: italic !important; }} 
             .h-grp {{ text-align: center !important; font-weight: bold; border-bottom: 2px solid #FFF !important; font-size: 10px; }}
             
-            /* DIV DE SCROLL IGUAL AO QUADRO 04 */
+            /* CONTAINER DE SCROLL MELHORADO */
             .responsive-scroll-yoy {{ 
-                width: 100%; 
+                width: 100% !important; 
                 overflow-x: auto !important; 
-                -webkit-overflow-scrolling: touch; 
-                display: block;
+                overflow-y: hidden !important;
+                display: block !important;
+                -webkit-overflow-scrolling: touch !important;
+            }}
+
+            .responsive-scroll-yoy table {{
+                display: table !important; /* Mantém comportamento de tabela para respeitar larguras */
             }}
         </style>
         
