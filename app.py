@@ -13,27 +13,30 @@ st.set_page_config(page_title="V3A Financeiro", layout="wide", initial_sidebar_s
 
 
 # =================================================================
-# 2. SISTEMA DE ACESSO (LOGIN) - CENTRALIZAÇÃO TOTAL (FIX FINAL)
+# 2. SISTEMA DE ACESSO (LOGIN) - VERSÃO FINAL CORRIGIDA
 # =================================================================
+
+# Inicializa o estado de autenticação
 if 'autenticado' not in st.session_state:
     st.session_state.autenticado = False
 
 def validar_senha():
-    if st.session_state.get("senha_digitada") == "cashflow":
+    # Busca a senha digitada no widget
+    senha = st.session_state.get("senha_input")
+    
+    if senha == "cashflow":
         st.session_state.autenticado = True
-        del st.session_state["senha_digitada"]
-    else:
-        st.error("Senha incorreta.")
+        # Limpa o campo para a próxima execução, mas mantém a chave ativa
+        st.session_state["senha_input"] = "" 
+    elif senha != "" and senha is not None:
+        # Só exibe erro se o campo NÃO estiver vazio e a senha for errada
+        st.error("Senha incorreta. Tente novamente.")
 
+# Se não estiver autenticado, desenha a tela de login e para a execução do resto do app
 if not st.session_state.autenticado:
     st.markdown("""
         <style>
-        /* 1. RESET E CENTRALIZAÇÃO DA PÁGINA INTEIRA */
-        [data-testid="stAppViewContainer"] > section:nth-child(2) > div:nth-child(1) {
-            max-width: 100% !important;
-            padding: 0 !important;
-        }
-        
+        /* RESET E CENTRALIZAÇÃO */
         .main .block-container {
             max-width: 100% !important;
             padding: 0 !important;
@@ -44,43 +47,18 @@ if not st.session_state.autenticado:
             background-color: white;
         }
 
-        /* Força o conteúdo interno do Streamlit a centralizar também */
-        [data-testid="stVerticalBlock"] {
-            align-items: center !important;
-            justify-content: center !important;
-        }
-
-        /* 2. O CONTAINER DO LOGIN */
+        /* CONTAINER DO CARD DE LOGIN */
         .login-wrapper {
             width: 100% !important;
-            max-width: 280px !important; 
+            max-width: 320px !important; 
             display: flex !important;
             flex-direction: column !important;
             align-items: center !important; 
-            justify-content: center !important;
             text-align: center !important;
+            padding: 20px;
         }
 
-        /* 3. CENTRALIZAÇÃO DA LOGO E COMPONENTES */
-        [data-testid="stImage"], [data-testid="stImage"] > img {
-            display: block !important;
-            margin-left: auto !important;
-            margin-right: auto !important;
-            text-align: center !important;
-        }
-        
-        [data-testid="stImage"] {
-            display: flex !important;
-            justify-content: center !important;
-        }
-
-        /* 4. CENTRALIZAÇÃO DO BOTÃO */
-        [data-testid="stButton"] {
-            display: flex !important;
-            justify-content: center !important;
-            width: 100% !important;
-        }
-
+        /* ESTILO DO BOTÃO */
         .stButton button {
             width: 100% !important;
             background-color: #B8860B !important;
@@ -89,55 +67,55 @@ if not st.session_state.autenticado:
             height: 45px !important;
             border-radius: 8px !important;
             border: none !important;
-            margin-top: 20px !important;
+            margin-top: 10px !important;
         }
 
-        /* 5. CAMPO DE SENHA UNIFORME */
-        [data-testid="stTextInput"] {
-            width: 100% !important;
-        }
-
+        /* ESTILO DO CAMPO DE TEXTO */
         .stTextInput input {
             text-align: center !important;
             height: 45px !important;
             border-radius: 8px !important;
-            border: 1px solid #ddd !important;
         }
 
-        /* Esconde elementos indesejados */
+        /* ESCONDE CABEÇALHOS E MENUS DURANTE LOGIN */
         [data-testid="stHeader"], [data-testid="stSidebar"], [data-testid="stToolbar"], label {
             display: none !important;
         }
         </style>
     """, unsafe_allow_html=True)
 
-    # Início do HTML Centralizado
+    # Início do Layout de Login
     st.markdown('<div class="login-wrapper">', unsafe_allow_html=True)
     
-    # Logo Centralizada
+    # Logo
     try:
-        # Usamos o container para garantir que a imagem não herde alinhamentos externos
         st.image("image_3.png", width=160)
     except:
         st.markdown("<h3 style='text-align:center;'>V3A</h3>", unsafe_allow_html=True)
 
-    # Textos
-    st.markdown("<h2 style='margin: 20px 0 5px 0; color: #1A1A1A; font-family: sans-serif; text-align: center; width: 100%;'>Acesso Restrito</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 20px; text-align: center; width: 100%;'>Digite a senha para acessar o relatório</p>", unsafe_allow_html=True)
+    st.markdown("<h2 style='margin-top: 20px; color: #1A1A1A; font-family: sans-serif;'>Acesso Restrito</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 25px;'>Digite a senha para acessar o painel</p>", unsafe_allow_html=True)
 
-    # Widgets (Streamlit injeta aqui dentro)
-    st.text_input("Senha", type="password", key="senha_digitada", placeholder="Senha", on_change=validar_senha)
-    st.button("Acessar Relatório", on_click=validar_senha)
+    # Widget de entrada de senha
+    # Usamos on_change para validar quando o usuário aperta ENTER
+    st.text_input("Senha", type="password", key="senha_input", placeholder="Sua senha aqui", on_change=validar_senha)
+    
+    # Botão de acesso
+    if st.button("Acessar Relatório"):
+        validar_senha()
+        if st.session_state.autenticado:
+            st.rerun() # Força o app a recarregar e esconder o login imediatamente
     
     st.markdown('</div>', unsafe_allow_html=True)
-
+    
+    # Interrompe a execução aqui enquanto não logar
     st.stop()
-    
 
 # =================================================================
-# 2. FIM DO ACESSO AO SISTEMA
+# 3. CARREGAMENTO DE DADOS (Só inicia após o login)
 # =================================================================
-    
+# Seu código de load_all_v3a_data() continua aqui...
+        
     
     # Estrutura Visual
     # Usamos o markdown para envolver os componentes do Streamlit no nosso Card CSS
