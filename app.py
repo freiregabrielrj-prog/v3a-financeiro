@@ -1298,12 +1298,19 @@ elif st.session_state.pagina == "Orçamento":
 #====================# QUADRO 2: ORÇAMENTO ANUAL (CABEÇALHO CONGELADO) #====================#
     
     st.markdown('<div class="header-container" style="margin-top: 20px;"><div class="quadro-num">02.</div><div class="quadro-titulo">Orçamento Anual</div></div>', unsafe_allow_html=True)
-    
+
+    # 1. Carga e Limpeza de dados (Remoção de None/NaN)
     df_o_a_orc = data["ORC_ANUAL"].copy()
-    
-    # Ajuste de nomes de colunas para serem curtos (Mobile First)
+
+    # Filtros para remover linhas sujas do Excel
+    df_o_a_orc = df_o_a_orc[df_o_a_orc.iloc[:, 0].notna()] # Remove NaNs reais
+    df_o_a_orc = df_o_a_orc[df_o_a_orc.iloc[:, 0].astype(str).str.lower() != "none"] # Remove texto "none"
+    df_o_a_orc = df_o_a_orc[df_o_a_orc.iloc[:, 0].astype(str).str.strip() != ""] # Remove linhas vazias/espaços
+
+    # 2. Ajuste de nomes de colunas para serem curtos (Mobile First)
     df_o_a_orc.columns = [meses_abr.get(pd.to_datetime(c_val).month, str(c_val)).upper() if isinstance(c_val, datetime) else str(c_val) for c_val in df_o_a_orc.columns]
         
+    # 3. Montagem do HTML/CSS e JavaScript de Interatividade
     html_orc_final = f"""
         <div style="background-color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; margin-bottom: 40px;">
             <style>
@@ -1339,7 +1346,7 @@ elif st.session_state.pagina == "Orçamento":
                 .v3a-table-o td {{ padding: 8px 4px; border-bottom: 1px solid #F0F0F0; white-space: nowrap; text-align: center; }} 
                 .v3a-table-o th, .v3a-table-o td {{ min-width: 80px; }}
                 
-                /* Primeira Coluna alinhada à esquerda */
+                /* Primeira Coluna Fixa à Esquerda */
                 .v3a-table-o td:first-child {{ 
                     text-align: left !important; 
                     font-weight: bold; 
@@ -1387,11 +1394,13 @@ elif st.session_state.pagina == "Orçamento":
         
     html_orc_final += "</tr></thead><tbody>"
         
+    # 4. Loop de Construção das Linhas da Tabela
     cp1o_orc, cp2o_orc = 0, 0
     for _, row_o_vals in df_o_a_orc.iterrows():
         dr_orc = str(row_o_vals.iloc[0]).strip()
         dn_orc = normalize_id(dr_orc)
         
+        # Lógica de Hierarquia (Pai, Filho, Neto)
         if dn_orc in p_orc_l_names:
             cp1o_orc += 1
             html_orc_final += f'<tr class="row-p1-orc" onclick="toggleOrc({cp1o_orc}, \'p1\')"><td><span id="ao-{cp1o_orc}p1" class="arrow-o-orc">▶</span> {dr_orc}</td>'
@@ -1401,6 +1410,7 @@ elif st.session_state.pagina == "Orçamento":
         else:
             html_orc_final += f'<tr class="row-child-o-orc p2-child-of-{cp2o_orc} neto-of-p1-{cp1o_orc}"><td class="indent-orc-neta">{dr_orc}</td>'
         
+        # Preenchimento das Células de Valores
         for j_o, v_o_cell in enumerate(row_o_vals[1:]):
             is_pct_col_o = (j_o == 4) 
             tooltip_txt = ""
@@ -1421,14 +1431,13 @@ elif st.session_state.pagina == "Orçamento":
         html_orc_final += '</tr>'
             
     html_orc_final += "</tbody></table></div></div>"
-    
+
+    # 5. Renderização do Componente
     st.components.v1.html(html_orc_final, height=500, scrolling=True)
     
     
     
     #====================# QUADRO 3: DASHBOARD ORÇADO X REALIZADO #====================#
-    
-    st.markdown('<div class="header-container"><div class="quadro-num">03.</div><div class="quadro-titulo">Dashboard Orçado x Realizado - Anual 2026</div></div>', unsafe_allow_html=True)
     
     cc_labels_orc, cc_orcado_orc, cc_realizado_orc = [], [], []
     for _, row_dash in df_raw_orc_data.iterrows():
