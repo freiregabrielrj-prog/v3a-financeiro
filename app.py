@@ -10,115 +10,85 @@ import base64
 st.set_page_config(page_title="V3A Financeiro", layout="wide", initial_sidebar_state="collapsed")
 
 
-
-
 # =================================================================
-# 2. SISTEMA DE ACESSO (LOGIN) - VERSÃO FINAL CORRIGIDA
+# 2. SISTEMA DE ACESSO (LOGIN) - COM AJUSTE MANUAL DE MARGENS
 # =================================================================
 
-# Inicializa o estado de autenticação
 if 'autenticado' not in st.session_state:
     st.session_state.autenticado = False
 
 def validar_senha():
-    # Busca a senha digitada no widget
-    senha = st.session_state.get("senha_input")
-    
-    if senha == "cashflow":
+    if st.session_state.senha_input == "cashflow":
         st.session_state.autenticado = True
-        # Limpa o campo para a próxima execução, mas mantém a chave ativa
-        st.session_state["senha_input"] = "" 
-    elif senha != "" and senha is not None:
-        # Só exibe erro se o campo NÃO estiver vazio e a senha for errada
-        st.error("Senha incorreta. Tente novamente.")
+    else:
+        st.session_state.erro_login = True
 
-# Se não estiver autenticado, desenha a tela de login e para a execução do resto do app
 if not st.session_state.autenticado:
+
     st.markdown("""
         <style>
-        /* RESET E CENTRALIZAÇÃO */
+        .stApp { background-color: #F0F2F5; }
+
         .main .block-container {
-            max-width: 100% !important;
-            padding: 0 !important;
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
-            height: 100vh !important;
-            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
 
-        /* CONTAINER DO CARD DE LOGIN */
-        .login-wrapper {
-            width: 100% !important;
-            max-width: 320px !important; 
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: center !important; 
-            text-align: center !important;
-            padding: 20px;
-        }
-
-        /* ESTILO DO BOTÃO */
-        .stButton button {
-            width: 100% !important;
-            background-color: #B8860B !important;
-            color: white !important;
-            font-weight: bold !important;
-            height: 45px !important;
-            border-radius: 8px !important;
-            border: none !important;
-            margin-top: 10px !important;
-        }
-
-        /* ESTILO DO CAMPO DE TEXTO */
         .stTextInput input {
             text-align: center !important;
-            height: 45px !important;
+            height: 50px !important;
             border-radius: 8px !important;
+            border: 1px solid #D1D5DB !important;
         }
 
-        /* ESCONDE CABEÇALHOS E MENUS DURANTE LOGIN */
-        [data-testid="stHeader"], [data-testid="stSidebar"], [data-testid="stToolbar"], label {
+        /* CONTAINER PAI DO BOTÃO */
+        .stButton {
+            display: flex !important;
+            justify-content: center !important;
+            width: 100% !important;
+        }
+
+        /* O BOTÃO (AQUI VOCÊ FAZ O AJUSTE MANUAL) */
+        div.stButton > button {
+            width: 100% !important;
+            max-width: 100% !important;
+            height: 50px !important;
+            background-color: #FFCB05 !important;
+            color: #1A1A1A !important;
+            font-weight: bold !important;
+            text-transform: uppercase !important;
+            border-radius: 8px !important;
+            border: none !important;
+            
+            /* --- AJUSTE MANUAL DE POSIÇÃO --- */
+            margin-top: 20px !important;    /* Aumente para descer, diminua para subir */
+            margin-bottom: 50px !important;
+            margin-left: 230px !important;    /* Use para ajustes finos laterais */
+        }
+
+        [data-testid="stHeader"], [data-testid="stToolbar"], label {
             display: none !important;
         }
         </style>
     """, unsafe_allow_html=True)
 
-    # Início do Layout de Login
-    st.markdown('<div class="login-wrapper">', unsafe_allow_html=True)
-    
-    # Logo
-    try:
-        st.image("image_3.png", width=160)
-    except:
-        st.markdown("<h3 style='text-align:center;'>V3A</h3>", unsafe_allow_html=True)
+    _, col_central, _ = st.columns([1, 1.2, 1])
 
-    st.markdown("<h2 style='margin-top: 20px; color: #1A1A1A; font-family: sans-serif;'>Acesso Restrito</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #666; font-size: 14px; margin-bottom: 25px;'>Digite a senha para acessar o painel</p>", unsafe_allow_html=True)
+    with col_central:
+        st.markdown("<h2 style='text-align: center; color: #1A1A1A; margin-bottom: 5px;'>Acesso Restrito</h2>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #666; margin-bottom: 25px;'>Financeiro - Painel Executivo</p>", unsafe_allow_html=True)
 
-    # Widget de entrada de senha
-    # Usamos on_change para validar quando o usuário aperta ENTER
-    st.text_input("Senha", type="password", key="senha_input", placeholder="Sua senha aqui", on_change=validar_senha)
-    
-    # Botão de acesso
-    if st.button("Acessar Relatório"):
-        validar_senha()
-        if st.session_state.autenticado:
-            st.rerun() # Força o app a recarregar e esconder o login imediatamente
-    
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Interrompe a execução aqui enquanto não logar
+        st.text_input("", type="password", key="senha_input", placeholder="Digite sua senha", on_change=validar_senha)
+
+        if st.button("Entrar no Relatório"):
+            validar_senha()
+            if st.session_state.autenticado:
+                st.rerun()
+
     st.stop()
 
-
-
-
-# =================================================================
-# 3. CARREGAMENTO DE DADOS (Só inicia após o login)
-# =================================================================
-# Seu código de load_all_v3a_data() continua aqui...
-        
     
     # Estrutura Visual
     # Usamos o markdown para envolver os componentes do Streamlit no nosso Card CSS
@@ -553,11 +523,20 @@ def render_obs_card(df, section_name):
 #=================PRIMEIRA PAGINA - DRE==================#
 #========================================================#
 
+
 if st.session_state.pagina == "DRE":
+    
+    # --- DEFINE O MÊS DE REFERÊNCIA GLOBAL (CORREÇÃO AQUI) ---
+    # Isso garante que a variável exista antes de qualquer tentativa de uso
+    mes_referencia_global = meses_lista_full[index_fechamento] 
+    
     # --- KPI EXTRACTION (TOP LEVEL) ---
     df_kpi_raw = data["DRE"].copy()
+    
     def get_accum(label_part):
         try:
+            # Note que aqui usamos "Acumulado" porque no DataFrame bruto do Pandas 
+            # a coluna ainda tem o nome original do Excel
             mask = df_kpi_raw.iloc[:,0].astype(str).str.contains(label_part, case=False, na=False, regex=True)
             return safe_float(df_kpi_raw[mask].iloc[0]["Acumulado"])
         except:
@@ -581,8 +560,8 @@ if st.session_state.pagina == "DRE":
         """, unsafe_allow_html=True)
 
 
-#====================# QUADRO 1: DRE GERENCIAL (CABEÇALHO CONGELADO) #====================#
-    
+    #====================# QUADRO 1: DRE GERENCIAL (CABEÇALHO DINÂMICO FINAL) #====================#
+            
     st.markdown('<div style="padding-top: 10px;"></div>', unsafe_allow_html=True)
 
     # 1. Título
@@ -609,66 +588,65 @@ if st.session_state.pagina == "DRE":
 
     # --- LÓGICA DE DADOS ---
     df_dre = data[aba_selecionada].copy()
-    map_abr_cols = {v: meses_abr[k] for k, v in meses_pt.items()}
-    df_dre.columns = [map_abr_cols.get(str(col).strip(), str(col)) for col in df_dre.columns]
 
+    # 1. IDENTIFICAÇÃO DO MÊS DO HEADER (BUSCA POR TEXTO NO PRINT)
+    try:
+        # Capturamos a string exata que gera o seu cabeçalho (ex: "mar/2026")
+        texto_referencia = str(meses_lista_full[index_fechamento]).lower()
+        
+        # Mapeamento para conversão
+        traducao_direta = {
+            'jan': 'Janeiro', 'fev': 'Fevereiro', 'mar': 'Março', 'abr': 'Abril',
+            'mai': 'Maio', 'jun': 'Junho', 'jul': 'Julho', 'ago': 'Agosto',
+            'set': 'Setembro', 'out': 'Outubro', 'nov': 'Novembro', 'dez': 'Dezembro'
+        }
+        
+        # Procuramos qual chave do dicionário está contida no texto do cabeçalho
+        nome_mes_header = "Mês"
+        for sigla, extenso in traducao_direta.items():
+            if sigla in texto_referencia:
+                nome_mes_header = extenso
+                break
+    except:
+        nome_mes_header = "Mês"
+
+    # 2. RENOMEAÇÃO DA COLUNA ACUMULADO
+    map_abr_cols = {v: meses_abr[k] for k, v in meses_pt.items()}
+    novas_cols = []
+    for idx, c in enumerate(df_dre.columns):
+        col_nome = str(c).strip()
+        if idx == 1: # Forçamos a segunda coluna a ser o Acumulado dinâmico
+            novas_cols.append(f"Acum. {nome_mes_header}")
+        else:
+            # Mantém JAN, FEV, MAR etc para as colunas mensais
+            novas_cols.append(map_abr_cols.get(col_nome, col_nome))
+
+    df_dre.columns = novas_cols
+
+    # --- PROCESSO DE RENDERIZAÇÃO ---
     parents_dre = ["+ Receita Bruta", "- Custo", "- Imposto", "- Despesas", "+ Outras Receitas", "- Outras Despesas", "- Investimentos"]
     subs_hierarquia = ["ondemand", "ventures"]
 
-    # HTML COM CABEÇALHO STICKY
     html_dre = f"""
         <div style="background-color: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; padding: 15px; margin-top: 10px; margin-bottom: 40px;">
             <style>
-                .responsive-scroll-dre {{ 
-                    max-height: 550px; 
-                    overflow: auto !important; 
-                    position: relative;
-                }}
-
-                .v3a-table {{ 
-                    border-collapse: separate; 
-                    border-spacing: 0;
-                    width: 100%;
-                    font-size: 11px; 
-                    font-family: 'Segoe UI', sans-serif; 
-                }} 
-                
-                /* CONGELAR APENAS O CABEÇALHO */
+                .responsive-scroll-dre {{ max-height: 550px; overflow: auto !important; position: relative; }}
+                .v3a-table {{ border-collapse: separate; border-spacing: 0; width: 100%; font-size: 11px; font-family: 'Segoe UI', sans-serif; }} 
                 .v3a-table thead tr th {{ 
-                    background: #1A1A1A; 
-                    color: #FFF; 
-                    padding: 10px 5px; 
-                    text-align: center !important; 
-                    white-space: nowrap; 
-                    position: sticky;
-                    top: 0;
-                    z-index: 100;
-                    border-bottom: 2px solid #333;
+                    background: #1A1A1A; color: #FFF; padding: 10px 5px; text-align: center !important; 
+                    white-space: nowrap; position: sticky; top: 0; z-index: 100; border-bottom: 2px solid #333;
                 }} 
-                
                 .v3a-table td {{ padding: 8px 10px; border-bottom: 1px solid #F0F0F0; text-align: center; }} 
                 .v3a-table th, .v3a-table td {{ min-width: 80px; }}
-
-                /* Primeira Coluna (Sem congelar, apenas alinhada) */
-                .v3a-table td:first-child {{ 
-                    text-align: left !important; 
-                    font-weight: bold; 
-                    min-width: 200px !important;
-                    white-space: normal !important; 
-                }} 
-
+                .v3a-table td:first-child {{ text-align: left !important; font-weight: bold; min-width: 200px !important; white-space: normal !important; }} 
                 .row-parent {{ background-color: #FFFFFF !important; font-weight: bold; cursor: pointer; }} 
                 .row-sub {{ background-color: #FFFFFF !important; font-weight: bold; cursor: pointer; display: none; }} 
                 .row-child-dre {{ background-color: #FFFFFF !important; display: none; }} 
                 .arrow {{ display: inline-block; width: 15px; color: #666; font-size: 10px; }}
                 .indent-sub {{ padding-left: 20px !important; }}
                 .indent-child {{ padding-left: 35px !important; font-weight: normal !important; color: #666; }}
-
                 .row-result-dre, .row-result-dre td {{ background-color: #f0f0f0 !important; font-weight: bold; }}
-
-                @media (max-width: 767px) {{
-                    .v3a-table {{ width: max-content !important; min-width: 1000px !important; }}
-                }}
+                @media (max-width: 767px) {{ .v3a-table {{ width: max-content !important; min-width: 1000px !important; }} }}
             </style>
             
             <script>
