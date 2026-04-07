@@ -349,7 +349,9 @@ st.markdown("""
     /* Cabeçalhos dos Quadros - Força alinhamento horizontal */
     .header-container { 
         display: flex !important;
-        align-items: center !important; 
+        flex-direction: row !important;
+        align-items: center !important;
+        flex-wrap: nowrap !important; 
         padding-top: 0px !important;
         margin-top: 0px !important;
         margin-bottom: 15px !important;
@@ -366,6 +368,7 @@ st.markdown("""
         display: inline-block !important;
         width: auto !important;
         height: auto !important;
+        flex-shrink: 0 !important;
     }
 
     .quadro-titulo { 
@@ -411,7 +414,7 @@ st.markdown("""
 
     /* Media Query para telas de Notebook Pequeno e Mobile */
     @media (max-width: 1024px) {
-        .header-container { flex-direction: column !important; align-items: flex-start !important; gap: 8px; }
+        .header-container { align-items: flex-start !important; gap: 8px; }
         .quadro-titulo { font-size: 16px !important; }
         .kpi-value { font-size: 18px !important; }
     }
@@ -456,6 +459,32 @@ st.markdown("""
     header {
         visibility: hidden;
         height: 0px;
+        
+    /* 1. Impede que o Streamlit tente criar margens laterais automáticas */
+    .block-container {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        padding-top: 1rem !important;
+        max-width: 100% !important;
+    }
+
+    /* 2. Remove o scroll horizontal do corpo principal (evita o "balanço" lateral) */
+    html, body, [data-testid="stAppViewContainer"] {
+        overflow-x: hidden !important;
+        position: relative;
+    }
+
+    /* 3. Garante que os componentes de HTML (tabelas) não estourem o container pai */
+    iframe {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    /* 4. Fix para Mobile: Evita zoom automático ao focar em selectboxes */
+    @media screen and (max-width: 768px) {
+        input, select, textarea {
+            font-size: 16px !important; /* Navegadores iOS dão zoom se a fonte for menor que 16px */
+        }
     }
     </style>
 """, unsafe_allow_html=True)
@@ -754,7 +783,7 @@ if st.session_state.pagina == "DRE":
             </div> 
         </div> """
 
-    st.components.v1.html(html_dre, height=550, scrolling=False)
+    st.components.v1.html(html_dre, height=550, scrolling=True)
 
 
 #====================# QUADRO 2: MARGEM BRUTA POR ÁREA 2026 (VERSÃO MOBILE OK) #====================#
@@ -903,7 +932,7 @@ if st.session_state.pagina == "DRE":
             </div>
         </div>"""
 
-        st.components.v1.html(html_ma, height=500, scrolling=False)
+        st.components.v1.html(html_ma, height=500, scrolling=True)
 
     except Exception as e:
         st.error(f"Erro ao processar Margem por Área: {e}")
@@ -1297,7 +1326,7 @@ elif st.session_state.pagina == "Orçamento":
     
     
 
-#====================# QUADRO 2: ORÇAMENTO ANUAL (VERSÃO MOBILE OK + TOOLTIPS) #====================#
+#====================# QUADRO 2: ORÇAMENTO ANUAL (VERSÃO FINAL RESPONSIVA) #====================#
     
     st.markdown('<div class="header-container" style="margin-top: 20px;"><div class="quadro-num">02.</div><div class="quadro-titulo">Orçamento Anual</div></div>', unsafe_allow_html=True)
     
@@ -1309,31 +1338,89 @@ elif st.session_state.pagina == "Orçamento":
     html_orc_final = f"""
         <div style="background-color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; margin-bottom: 40px;">
             <style>
-                /* CLINICA QUADRO 04: Fonte 11px e Scroll Touch */
-                .v3a-table-o {{ width: 100%; border-collapse: collapse; color: #000; font-size: 11px; font-family: 'Segoe UI', sans-serif; }} 
-                .v3a-table-o thead th {{ position: sticky; top: 0; z-index: 10; background: #1A1A1A; color: #FFF; padding: 10px 4px; text-align: center; white-space: nowrap; }} 
+                /* CONFIGURAÇÃO BASE DA TABELA */
+                .v3a-table-o {{ 
+                    border-collapse: collapse; 
+                    color: #000; 
+                    font-size: 11px; 
+                    font-family: 'Segoe UI', sans-serif; 
+                    table-layout: auto !important;
+                }} 
                 
-                /* Controle de largura da primeira coluna para não espremer no mobile */
-                .v3a-table-o td:first-child {{ text-align: left; width: 180px; font-weight: bold; white-space: normal; }} 
+                /* CENTRALIZAÇÃO DOS TÍTULOS */
+                .v3a-table-o thead th {{ 
+                    position: sticky; 
+                    top: 0; 
+                    z-index: 10; 
+                    background: #1A1A1A; 
+                    color: #FFF; 
+                    padding: 10px 4px; 
+                    text-align: center !important; 
+                    white-space: nowrap; 
+                }} 
+                
                 .v3a-table-o td {{ padding: 8px 4px; border-bottom: 1px solid #F0F0F0; white-space: nowrap; text-align: center; }} 
+
+                /* FORÇAR COLUNAS A NÃO ENCOLHER */
+                .v3a-table-o th, .v3a-table-o td {{ min-width: 75px; }}
                 
+                /* PRIMEIRA COLUNA: Título centralizado e Células à esquerda */
+                .v3a-table-o thead th:first-child {{ 
+                    text-align: center !important; 
+                    width: 200px !important; 
+                    min-width: 180px !important;
+                    white-space: normal !important; 
+                }} 
+                
+                .v3a-table-o td:first-child {{ 
+                    text-align: left !important; 
+                    font-weight: bold; 
+                    white-space: normal !important; 
+                    min-width: 180px !important; 
+                }} 
+
+                /* ELEMENTOS VISUAIS E HIERARQUIA */
                 .row-p1-orc {{ background-color: #FFFFFF !important; font-weight: bold; cursor: pointer; }} 
                 .row-p2-orc {{ background-color: #FFFFFF !important; font-weight: bold; cursor: pointer; display: none; }} 
                 .row-child-o-orc {{ background-color: #FFFFFF !important; display: none; }} 
-                .arrow-o-orc {{ display: inline-block; width: 15px; color: #B8860B; font-size: 10px; }}
                 
-                /* Indentação Mobile First (Reduzida) */
+                /* AJUSTE: Seta na cor cinza escuro igual a DRE Gerencial */
+                .arrow-o-orc {{ display: inline-block; width: 15px; color: #666; font-size: 10px; }}
+                
                 .indent-orc-p2 {{ padding-left: 20px !important; font-weight: normal !important; }}
                 .indent-orc-neta {{ padding-left: 35px !important; font-weight: normal !important; font-style: italic; color: #666; font-size: 10px; }}
                 
                 .has-tooltip {{ border-bottom: 1px dotted #B8860B; cursor: help; display: inline-block; }}
 
-                /* DIV DE SCROLL TOUCH SUAVE */
+                /* CONTAINER DE SCROLL */
                 .responsive-scroll-anual {{ 
-                    width: 100%; 
+                    width: 100% !important; 
                     overflow-x: auto !important; 
-                    -webkit-overflow-scrolling: touch; 
-                    display: block;
+                    overflow-y: hidden !important;
+                    display: block !important;
+                    -webkit-overflow-scrolling: touch !important;
+                }}
+
+                /* COMPORTAMENTO DESKTOP */
+                @media (min-width: 768px) {{
+                    .v3a-table-o {{
+                        width: 100% !important;
+                        min-width: 100% !important;
+                    }}
+                    .responsive-scroll-anual table {{
+                        display: table !important;
+                    }}
+                }}
+
+                /* COMPORTAMENTO MOBILE */
+                @media (max-width: 767px) {{
+                    .v3a-table-o {{ 
+                        width: max-content !important; 
+                        min-width: 1100px !important; 
+                    }}
+                    .responsive-scroll-anual table {{
+                        display: block !important;
+                    }}
                 }}
             </style>
             
@@ -1398,7 +1485,7 @@ elif st.session_state.pagina == "Orçamento":
             
     html_orc_final += "</tbody></table></div></div>"
     
-    st.components.v1.html(html_orc_final, height=500, scrolling=False)
+    st.components.v1.html(html_orc_final, height=500, scrolling=True)
     
     
     #====================# QUADRO 3: DASHBOARD ORÇADO X REALIZADO #====================#
