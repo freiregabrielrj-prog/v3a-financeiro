@@ -1936,8 +1936,7 @@ elif st.session_state.pagina == "Receitas":
         st.error(f"Erro ao processar Evolução de Receita: {e}")
 
 
-#====================# QUADRO 5: GRÁFICO DE EVOLUÇÃO ANUAL (LINHA ESTÁTICA ABREVIADA) #====================#
-
+#====================# QUADRO 5: GRÁFICO DE EVOLUÇÃO ANUAL (LINHA ESTÁTICA ABREVIADA COM GRADES) #====================#
 
     try:
         if not df_evol.empty:
@@ -1975,22 +1974,24 @@ elif st.session_state.pagina == "Receitas":
                 name="Receita Anual"
             ))
 
-            # 3. Estilização do Layout
+            # 3. Estilização do Layout com Grades Sutis
             fig_evol_anual.update_layout(
                 paper_bgcolor='rgba(0,0,0,0)',
                 plot_bgcolor='rgba(0,0,0,0)',
                 margin=dict(l=30, r=30, t=50, b=10),
                 height=350,
                 showlegend=False,
-                font=dict(family="Segoe UI", size=13, color='#1A1A1A'), # Fonte levemente maior para os "M"
+                font=dict(family="Segoe UI", size=13, color='#1A1A1A'), 
                 xaxis=dict(
                     type='category',
-                    showgrid=False,
+                    showgrid=True,            # Ativa grade vertical
+                    gridcolor='#F0F0F0',      # Cor sutil da grade
                     linecolor='#E9ECEF',
                     tickfont=dict(weight='bold', color='#444')
                 ),
                 yaxis=dict(
-                    showgrid=False,
+                    showgrid=True,            # Ativa grade horizontal
+                    gridcolor='#F0F0F0',      # Cor sutil da grade
                     showticklabels=False,
                     zeroline=False,
                     # Margem de segurança para o texto "M" não cortar no topo
