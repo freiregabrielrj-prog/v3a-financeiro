@@ -11,7 +11,7 @@ st.set_page_config(page_title="V3A Financeiro", layout="wide", initial_sidebar_s
 
 
 # =================================================================
-# 2. SISTEMA DE ACESSO (LOGIN) - COM AJUSTE MANUAL DE MARGENS
+# 2. SISTEMA DE ACESSO (LOGIN) - CENTRALIZAÇÃO AUTOMÁTICA UNIVERSAL
 # =================================================================
 
 if 'autenticado' not in st.session_state:
@@ -27,33 +27,39 @@ if not st.session_state.autenticado:
 
     st.markdown("""
         <style>
-        .stApp { background-color: #F0F2F5; }
-
-        .main .block-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+        /* 1. FUNDO E RESET DE MARGENS NATIVAS */
+        .stApp {
+            background-color: #F0F2F5;
         }
 
+        /* 2. O PULO DO GATO: CENTRALIZAÇÃO AUTOMÁTICA (DESKTOP E MOBILE) */
+        /* Isso ignora as colunas e força o conteúdo ao centro exato da tela */
+        .main .block-container {
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: center !important;
+            height: 100vh !important;
+            min-height: 100vh !important;
+            padding: 0 !important;
+        }
+
+        /* 3. LARGURA DOS ELEMENTOS (PARA NÃO FICAREM GIGANTES NO DESKTOP) */
+        .stTextInput, .stButton, [data-testid="stVerticalBlock"] {
+            width: 100% !important;
+            max-width: 350px !important; /* Largura ideal para Mobile e Desktop */
+            margin: 0 auto !important;
+        }
+
+        /* 4. ESTILO DOS CAMPOS */
         .stTextInput input {
             text-align: center !important;
             height: 50px !important;
             border-radius: 8px !important;
-            border: 1px solid #D1D5DB !important;
         }
 
-        /* CONTAINER PAI DO BOTÃO */
-        .stButton {
-            display: flex !important;
-            justify-content: center !important;
-            width: 100% !important;
-        }
-
-        /* O BOTÃO (AQUI VOCÊ FAZ O AJUSTE MANUAL) */
         div.stButton > button {
             width: 100% !important;
-            max-width: 100% !important;
             height: 50px !important;
             background-color: #FFCB05 !important;
             color: #1A1A1A !important;
@@ -61,31 +67,37 @@ if not st.session_state.autenticado:
             text-transform: uppercase !important;
             border-radius: 8px !important;
             border: none !important;
-            
-            /* --- AJUSTE MANUAL DE POSIÇÃO --- */
-            margin-top: 20px !important;    /* Aumente para descer, diminua para subir */
-            margin-bottom: 0px !important;
-            margin-left: 150px !important;    /* Use para ajustes finos laterais */
+            margin-top: 15px !important;
         }
 
+        /* 5. REMOVER HEADER E TOOLBAR */
         [data-testid="stHeader"], [data-testid="stToolbar"], label {
             display: none !important;
         }
         </style>
     """, unsafe_allow_html=True)
 
-    _, col_central, _ = st.columns([1, 1.2, 1])
+    # Note que agora não precisamos mais de st.columns complexas
+    # O CSS acima já cuida de tudo.
+    
+    st.markdown("<h2 style='text-align: center; color: #1A1A1A; margin-bottom: 5px;'>Acesso Restrito</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #666; margin-bottom: 25px;'>Financeiro - Painel Executivo</p>", unsafe_allow_html=True)
 
-    with col_central:
-        st.markdown("<h2 style='text-align: center; color: #1A1A1A; margin-bottom: 5px;'>Acesso Restrito</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #666; margin-bottom: 25px;'>Financeiro - Painel Executivo</p>", unsafe_allow_html=True)
+    st.text_input(
+        "",
+        type="password",
+        key="senha_input",
+        placeholder="Digite sua senha",
+        on_change=validar_senha
+    )
 
-        st.text_input("", type="password", key="senha_input", placeholder="Digite sua senha", on_change=validar_senha)
+    if st.button("Entrar no Relatório"):
+        validar_senha()
+        if st.session_state.autenticado:
+            st.rerun()
 
-        if st.button("Entrar no Relatório"):
-            validar_senha()
-            if st.session_state.autenticado:
-                st.rerun()
+    if st.session_state.get("erro_login"):
+        st.error("Senha incorreta.")
 
     st.stop()
 
