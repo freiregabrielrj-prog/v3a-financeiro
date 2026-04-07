@@ -1823,7 +1823,7 @@ elif st.session_state.pagina == "Receitas":
     # 1. Título Padrão
     st.markdown("""
         <div class="header-container">
-            <div class="quadro-num">04.</div>
+            <div class="quadro-num">02.</div>
             <div class="quadro-titulo">Evolução de Receita</div>
         </div>
     """, unsafe_allow_html=True)
@@ -1943,7 +1943,7 @@ elif st.session_state.pagina == "Receitas":
 
         html_evol += "</tbody></table></div></div>"
         
-        st.components.v1.html(html_evol, height=400, scrolling=False)
+        st.components.v1.html(html_evol, height=350, scrolling=False)
 
     except Exception as e:
         st.error(f"Erro ao processar Evolução de Receita: {e}")
@@ -1951,12 +1951,7 @@ elif st.session_state.pagina == "Receitas":
 
 #====================# QUADRO 5: GRÁFICO DE EVOLUÇÃO ANUAL (LINHA) #====================#
     st.markdown('<div style="padding-top: 10px;"></div>', unsafe_allow_html=True)
-    st.markdown("""
-        <div class="header-container">
-            <div class="quadro-num">05.</div>
-            <div class="quadro-titulo">Gráfico de Evolução Anual</div>
-        </div>
-    """, unsafe_allow_html=True)
+
 
     try:
         # 1. Preparação dos dados
