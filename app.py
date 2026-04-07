@@ -933,11 +933,11 @@ if st.session_state.pagina == "DRE":
     except Exception as e:
         st.error(f"Erro ao processar Margem por Área: {e}")
 
-#====================# QUADRO 03: VISÃO EBITDA YOY 2026 x 2025 (FILTRO ABAIXO E TRAVA DE DIGITAÇÃO) #====================#
+#====================# QUADRO 03: VISÃO EBITDA YOY 2026 x 2025 (TOTALMENTE CENTRALIZADO) #====================#
     
     st.markdown('<div style="padding-top: 10px;"></div>', unsafe_allow_html=True)
     
-    # 1. Título em linha inteira (Número + Texto)
+    # 1. Título Centralizado (Usa o CSS Global que configuramos anteriormente)
     st.markdown("""
         <div class="header-container">
             <div class="quadro-num">03.</div>
@@ -945,10 +945,10 @@ if st.session_state.pagina == "DRE":
         </div>
     """, unsafe_allow_html=True)
         
-    # 2. Área de Filtro - Posicionada logo abaixo do título
-    col_sel_eb, col_spacer_eb = st.columns([1.2, 2.8])
+    # 2. Filtro Centralizado (Usando 3 colunas para garantir o eixo central)
+    col_spacer_L, col_sel_eb, col_spacer_R = st.columns([1.4, 1.2, 1.4]) 
     with col_sel_eb:
-        # Injeção de CSS específico para este selectbox para desabilitar o teclado/digitação
+        # Trava de digitação para mobile
         st.markdown("""
             <style>
                 div[data-testid="stSelectbox"]:has(div[data-baseweb="select"] button[aria-expanded]) input {
@@ -957,12 +957,12 @@ if st.session_state.pagina == "DRE":
                 }
             </style>
         """, unsafe_allow_html=True)
-
+        
         mes_eb = st.selectbox(
             "", 
             meses_lista_full, 
             index=index_fechamento, 
-            key=f"sel_ebitda_new_pos_{index_fechamento}", 
+            key=f"sel_eb_final_centered_{index_fechamento}", 
             label_visibility="collapsed"
         )
 
@@ -973,77 +973,60 @@ if st.session_state.pagina == "DRE":
     html_yoy = f"""
     <div style="background-color: #FFFFFF; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; padding: 15px; margin-top: 10px; margin-bottom: 0px;">
         <style>
-            /* CONFIGURAÇÃO BASE DA TABELA */
             .y-table {{ 
                 border-collapse: collapse; 
                 color: #000; 
                 font-size: 11px; 
                 font-family: 'Segoe UI', sans-serif; 
+                width: 100%;
                 table-layout: auto !important;
             }} 
             
-            /* CENTRALIZAÇÃO DOS CABEÇALHOS */
+            /* CENTRALIZAÇÃO TOTAL DOS HEADERS */
             .y-table thead tr th {{ 
                 background: #1A1A1A; 
                 color: #FFF; 
-                padding: 8px 10px; 
-                text-align: center !important; 
+                padding: 10px 5px; 
+                text-align: center !important; /* Força centralização */
+                vertical-align: middle !important;
                 white-space: nowrap; 
             }} 
             
             .y-table td {{ padding: 8px 10px; border-bottom: 1px solid #F0F0F0; text-align: center; }} 
 
-            /* CONFIGURAÇÃO DAS COLUNAS */
-            .y-table th, .y-table td {{ white-space: nowrap; min-width: 75px; }}
-            
             /* PRIMEIRA COLUNA (CATEGORIAS) */
-            .y-table thead th:first-child {{ 
-                text-align: center !important; 
-                width: 220px !important; 
-                min-width: 200px !important;
-                white-space: normal !important; 
-            }} 
-            
-            .y-table td:first-child {{ 
+            .y-table th:first-child, .y-table td:first-child {{ 
                 text-align: left !important; 
                 font-weight: bold; 
-                white-space: normal !important; 
-                min-width: 200px !important; 
-            }} 
+                width: 1%; 
+                white-space: nowrap;
+                padding-right: 30px;
+            }}
+            
+            /* Título da primeira coluna também centralizado */
+            .y-table thead th:first-child {{ text-align: center !important; }}
 
-            /* CONTAINER DE SCROLL */
             .responsive-scroll-yoy {{ 
                 width: 100% !important; 
                 overflow-x: auto !important; 
-                overflow-y: hidden !important;
                 display: block !important;
                 -webkit-overflow-scrolling: touch !important;
             }}
 
-            /* --- MEDIA QUERIES PARA RESPONSIVIDADE --- */
-            @media (min-width: 768px) {{
-                .y-table {{
-                    width: 100% !important;
-                    min-width: 100% !important;
-                }}
-                .responsive-scroll-yoy table {{
-                    display: table !important;
-                }}
-            }}
-
             @media (max-width: 767px) {{
-                .y-table {{ 
-                    width: max-content !important; 
-                    min-width: 900px !important; 
+                .y-table {{ width: max-content !important; min-width: 950px !important; }}
+                .y-table th:first-child, .y-table td:first-child {{ 
+                    min-width: 180px !important; 
+                    white-space: normal !important; 
+                    width: auto !important;
+                    text-align: left !important;
                 }}
-                .responsive-scroll-yoy table {{
-                    display: block !important;
-                }}
+                /* No mobile, manter o título da primeira coluna centralizado */
+                .y-table thead th:first-child {{ text-align: center !important; }}
             }}
 
             .y-yellow {{ background-color: #f0f0f0 !important; font-weight: bold; }} 
             .y-yellow td {{ background-color: #f0f0f0 !important; }}
-            .y-pct-clean {{ font-weight: normal !important; font-style: italic !important; }} 
             .h-grp {{ text-align: center !important; font-weight: bold; border-bottom: 2px solid #FFF !important; font-size: 10px; }}
         </style>
         
@@ -1057,9 +1040,9 @@ if st.session_state.pagina == "DRE":
                         <th colspan="4" class="h-grp" style="background:#555;">TOTAL ANO</th>
                     </tr>
                     <tr>
-                        <th style="text-align: center;">26</th><th>25</th><th>$</th><th>%</th>
-                        <th>26</th><th>25</th><th>$</th><th>%</th>
-                        <th>26</th><th>25</th><th>$</th><th>%</th>
+                        <th>2026</th><th>2025</th><th>$</th><th>%</th>
+                        <th>2026</th><th>2025</th><th>$</th><th>%</th>
+                        <th>2026</th><th>2025</th><th>$</th><th>%</th>
                     </tr>
                 </thead>
                 <tbody>"""
@@ -1071,31 +1054,18 @@ if st.session_state.pagina == "DRE":
             nm_eb = str(r26.iloc[1]).strip()
             is_p_eb = "%" in nm_eb or "Margem" in nm_eb
             f26, f25 = safe_float(r26.iloc[c_idx]), safe_float(r25.iloc[c_idx])
-            a26 = sum([safe_float(v_val) for v_val in r26.iloc[7:c_idx+1]])
-            a25 = sum([safe_float(v_val) for v_val in r25.iloc[7:c_idx+1]])
+            a26 = sum([safe_float(v_val) for v_val in r26.iloc[7:c_idx+1]]); a25 = sum([safe_float(v_val) for v_val in r25.iloc[7:c_idx+1]])
             t26, t25 = safe_float(r26.iloc[5]), safe_float(r25.iloc[5])
             
-            if is_p_eb:
-                vfn, vfp, van, vap, vtn, vtp = "n.a.", "n.a.", "n.a.", "n.a.", "n.a.", "n.a."
-            else:
-                vfn, vfp = fmt(f26-f25), fmt(safe_div(f26-f25, f25), True, False)
-                van, vap = fmt(a26-a25), fmt(safe_div(a26-a25, a25), True, False)
-                vtn, vtp = fmt(t26-t25), fmt(safe_div(t26-t25, t25), True, False)
+            vfn, vfp = (fmt(f26-f25), fmt(safe_div(f26-f25, f25), True, False)) if not is_p_eb else ("n.a.", "n.a.")
+            van, vap = (fmt(a26-a25), fmt(safe_div(a26-a25, a25), True, False)) if not is_p_eb else ("n.a.", "n.a.")
+            vtn, vtp = (fmt(t26-t25), fmt(safe_div(t26-t25, t25), True, False)) if not is_p_eb else ("n.a.", "n.a.")
             
             cls_eb = "y-yellow" if nm_eb.startswith('=') else ""
-            if is_p_eb: cls_eb += " y-pct-clean"
-            
             html_yoy += f"""<tr class="{cls_eb}"><td>{nm_eb}</td><td>{fmt(f26, is_p_eb)}</td><td>{fmt(f25, is_p_eb)}</td><td>{vfn}</td><td>{vfp}</td><td>{fmt(a26, is_p_eb)}</td><td>{fmt(a25, is_p_eb)}</td><td>{van}</td><td>{vap}</td><td>{fmt(t26, is_p_eb)}</td><td>{fmt(t25, is_p_eb)}</td><td>{vtn}</td><td>{vtp}</td></tr>"""
-        except:
-            continue
+        except: continue
 
-    html_yoy += """
-                </tbody>
-            </table>
-        </div> 
-    </div>
-    """
-
+    html_yoy += "</tbody></table></div></div>"
     st.components.v1.html(html_yoy, height=630, scrolling=False)
     
     
@@ -1626,7 +1596,7 @@ elif st.session_state.pagina == "Receitas":
     st.markdown('<div style="padding-top: 10px;"></div>', unsafe_allow_html=True)
 
     # 1. Título em linha inteira (Número + Texto)
-    st.markdown('<div class="header-container"><div class="quadro-num">04.</div><div class="quadro-titulo">Top 10 Clientes</div></div>', unsafe_allow_html=True)
+    st.markdown('<div class="header-container"><div class="quadro-num">01.</div><div class="quadro-titulo">Top 10 Clientes</div></div>', unsafe_allow_html=True)
 
     # 2. Área de Filtro - Posicionada logo abaixo do título
     col_sel_t10, col_spacer_t10 = st.columns([1.8, 2.2])
