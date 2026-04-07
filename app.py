@@ -326,166 +326,103 @@ except:
 meses_lista_full = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", 
                     "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
 
-# 4. ESTILO CSS GLOBAL CONSOLIDADO (VERSÃO FINAL COM AJUSTES VISUAIS)
+# 4. ESTILO CSS GLOBAL CONSOLIDADO (VERSÃO FINAL REVISADA E LIMPA)
 st.markdown("""
     <style>
     :root {
         --space-lg: 32px;
         --v3a-gold: #B8860B;
+        --v3a-yellow: #ffcb05;
         --text-dark: #1A1A1A;
-        --cor-nuvem: #f0f0f0; /* Cor Nuvem solicitada */
-    }
-    [data-testid="stAppViewContainer"] { background-color: #F8F9FA !important; }
-    
-    [data-testid="stVerticalBlock"] > div { gap: 0rem !important; margin-bottom: 0px !important; }
-    
-    [data-testid="stHorizontalBlock"] {
-        padding-top: 0px !important; /* Remove o excesso que causa a diferença */
-        margin-top: 0px !important;
+        --cor-nuvem: #f0f0f0;
     }
 
-    .section-container { margin-bottom: var(--space-lg) !important; width: 100%; display: block; }
-    
-    /* Cabeçalhos dos Quadros - Força alinhamento horizontal */
+    /* 1. ESTRUTURA DA PÁGINA (WIDE E SEM ESPAÇOS SOBRANDO) */
+    [data-testid="stAppViewContainer"] { background-color: #F8F9FA !important; overflow-x: hidden !important; }
+    .block-container {
+        padding-top: 1rem !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        max-width: 100% !important;
+    }
+    header { visibility: hidden; height: 0px; } /* Remove o header vazio nativo */
+
+    /* 2. ALINHAMENTO HORIZONTAL DOS TÍTULOS (NÚMERO + TEXTO) */
     .header-container { 
         display: flex !important;
         flex-direction: row !important;
         align-items: center !important;
         flex-wrap: nowrap !important; 
-        padding-top: 0px !important;
-        margin-top: 0px !important;
         margin-bottom: 15px !important;
+        gap: 12px;
     }
 
-    /* Número Amarelo Simples ao lado do texto */
     .quadro-num { 
-        background-color: transparent !important;
-        color: #ffcb05 !important; 
+        color: var(--v3a-yellow) !important; 
         font-weight: bold !important; 
         font-size: 24px !important; 
-        margin-right: 17px !important; /* Espaço entre número e texto */
         line-height: 1 !important;
-        display: inline-block !important;
-        width: auto !important;
-        height: auto !important;
         flex-shrink: 0 !important;
+        display: inline-block !important;
     }
 
     .quadro-titulo { 
-        display: inline-block !important;
         font-weight: 700; 
         color: var(--text-dark); 
         font-size: 15px; 
         text-transform: uppercase; 
-        font-family: 'Segoe UI';
-        line-height: 1 !important;
+        font-family: 'Segoe UI', sans-serif;
+        line-height: 1.2 !important;
+        display: inline-block !important;
     }
 
-    /* 2) DRE GERENCIAL – LINHAS FILHAS (Branco Puro) */
+    /* 3. TABELAS E CORES (DRE E EBITDA) */
     .row-child-dre { background-color: #FFFFFF !important; }
-
-    /* 4 e 5) EBITDA, MARGEM POR ÁREA E TOP 10 (Fundo Nuvem nos Totais/Resultados) */
-    .y-yellow, .row-total-ma, .row-total-top { 
+    .y-yellow, .row-total-ma, .row-total-top, .row-total-final { 
         background-color: var(--cor-nuvem) !important;
+        font-weight: bold !important;
+    }
+    .y-yellow td, .row-total-final td { background-color: var(--cor-nuvem) !important; }
+
+    /* 4. RESPONSIVIDADE E SCROLL */
+    .responsive-scroll-yoy, .responsive-scroll-bytd, .responsive-scroll-anual {
+        width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        display: block !important;
     }
 
-    /* Ajuste de Container de KPIs para Grid Responsivo */
+    /* 5. KPIs GRID */
     .kpi-container { 
         display: grid; 
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
         gap: 12px; 
         margin-bottom: 25px; 
-        width: 100%;
     }
     .kpi-card {
         background-color: white; padding: 15px; border-radius: 8px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        border-left: 5px solid #ccc; font-family: 'Segoe UI', sans-serif;
-        box-sizing: border-box;
+        border-left: 5px solid #ccc;
     }
-
-    /* ESSENCIAL: Container para Scroll Horizontal em Tabelas */
-    .table-responsive-container {
-        width: 100%;
-        overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch;
-        display: block;
-    }
-
-    /* Media Query para telas de Notebook Pequeno e Mobile */
-    @media (max-width: 1024px) {
-        .header-container { align-items: flex-start !important; gap: 8px; }
-        .quadro-titulo { font-size: 16px !important; }
-        .kpi-value { font-size: 18px !important; }
-    }
-    
-    iframe { width: 100% !important; border: none !important; }
-            
-    .kpi-label { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; margin-bottom: 4px; }
+    .kpi-label { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; }
     .kpi-value { font-size: 22px; font-weight: 700; color: var(--text-dark); }
-    .periodo-label { font-size: 14px; font-weight: 600; color: #666; font-family: 'Segoe UI'; margin-right: 10px; white-space: nowrap; display: flex; align-items: center; height: 38px; }
-    div[data-testid="stSelectbox"] { margin-top: 0px !important; }
+
+    /* 6. SELECTBOXES E BOTOES */
     div[data-testid="stSelectbox"] label { display: none !important; }
-    div[data-testid="stSelectbox"] input { pointer-events: none !important; caret-color: transparent !important; }
-    .stPlotlyChart { background-color: transparent !important; border-radius: 12px !important; padding: 15px !important; box-shadow: none !important; border: none !important; margin-bottom: var(--space-lg) !important; }
-    iframe { border: none !important; margin: 0 !important; }
-    
-    /* ... todos os seus estilos anteriores (root, kpi-card, etc) ... */
-
-    /* ADICIONE AQUI O NOVO CSS PARA APROXIMAR OS BOTÕES DO QUADRO */
-    [data-testid="stVerticalBlock"] > div:has(div.header-container) + div {
-        margin-top: -10px !important;
-    }
-
-    div[data-testid="stSegmentedControl"] {
-        margin-bottom: 0px !important;
-        padding-bottom: 0px !important;
-    }
-
-    /* Aproveite e adicione a cor amarela/dourada para os botões se ainda não tiver */
     div[data-testid="stSegmentedControl"] button[aria-checked="true"] {
-        background-color: #B8860B !important;
+        background-color: var(--v3a-gold) !important;
         color: white !important;
     }
-    
-    /* 1. Zera o padding do container principal do Streamlit */
-    .block-container {
-        padding-top: 1rem !important; /* Estava em 6rem por padrão */
-        padding-bottom: 0rem;
-        margin-top: -20px; /* Puxa o conteúdo mais para cima ainda */
-    }
 
-    /* 2. Remove o header nativo do Streamlit que ocupa espaço vazio */
-    header {
-        visibility: hidden;
-        height: 0px;
-        
-    /* 1. Impede que o Streamlit tente criar margens laterais automáticas */
-    .block-container {
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
-        padding-top: 1rem !important;
-        max-width: 100% !important;
-    }
-
-    /* 2. Remove o scroll horizontal do corpo principal (evita o "balanço" lateral) */
-    html, body, [data-testid="stAppViewContainer"] {
-        overflow-x: hidden !important;
-        position: relative;
-    }
-
-    /* 3. Garante que os componentes de HTML (tabelas) não estourem o container pai */
-    iframe {
-        max-width: 100% !important;
-        width: 100% !important;
-    }
-
-    /* 4. Fix para Mobile: Evita zoom automático ao focar em selectboxes */
+    /* 7. AJUSTES MOBILE (PREVENÇÃO DE ZOOM E ALINHAMENTO) */
     @media screen and (max-width: 768px) {
-        input, select, textarea {
-            font-size: 16px !important; /* Navegadores iOS dão zoom se a fonte for menor que 16px */
-        }
+        input, select, textarea { font-size: 16px !important; } /* Impede zoom no iOS */
+        .quadro-titulo { font-size: 14px !important; }
+        .quadro-num { font-size: 20px !important; }
+        [data-testid="stVerticalBlock"] > div { gap: 0rem !important; }
     }
+
+    iframe { width: 100% !important; border: none !important; }
     </style>
 """, unsafe_allow_html=True)
 
