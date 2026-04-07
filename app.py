@@ -962,7 +962,7 @@ if st.session_state.pagina == "DRE":
             "", 
             meses_lista_full, 
             index=index_fechamento, 
-            key=f"sel_eb_final_v3a_{index_fechamento}", 
+            key=f"sel_eb_final_v3a_vfinal_{index_fechamento}", 
             label_visibility="collapsed"
         )
 
@@ -980,7 +980,7 @@ if st.session_state.pagina == "DRE":
                 font-size: 11px; 
                 font-family: 'Segoe UI', sans-serif; 
                 width: 100%;
-                table-layout: auto !important;
+                table-layout: auto;
             }} 
             
             /* CENTRALIZAÇÃO TOTAL DOS HEADERS */
@@ -1013,21 +1013,24 @@ if st.session_state.pagina == "DRE":
                 -webkit-overflow-scrolling: touch !important;
             }}
 
-            /* --- CORREÇÃO MOBILE: LARGURA DAS COLUNAS --- */
+            /* --- CORREÇÃO MOBILE DEFINITIVA --- */
             @media (max-width: 767px) {{
                 .y-table {{ 
                     width: max-content !important; 
-                    min-width: 1100px !important; 
+                    min-width: 1150px !important; 
+                    table-layout: fixed !important; /* Força a obediência às larguras abaixo */
                 }}
                 .y-table th:first-child, .y-table td:first-child {{ 
-                    min-width: 190px !important; 
+                    width: 190px !important; 
+                    min-width: 190px !important;
                     white-space: normal !important; 
-                    width: auto !important;
                     text-align: left !important;
                 }}
-                /* Padroniza largura das colunas numéricas no mobile */
+                /* Padroniza TODAS as 12 colunas numéricas com largura idêntica */
                 .y-table th:not(:first-child), .y-table td:not(:first-child) {{
-                    min-width: 75px !important;
+                    width: 80px !important;
+                    min-width: 80px !important;
+                    max-width: 80px !important;
                 }}
                 .y-table thead th:first-child {{ text-align: center !important; }}
             }}
@@ -1074,7 +1077,6 @@ if st.session_state.pagina == "DRE":
 
     html_yoy += "</tbody></table></div></div>"
     st.components.v1.html(html_yoy, height=630, scrolling=False)
-    
     
 
     # --- POSIÇÃO 1: OBSERVAÇÕES DRE GERENCIAL (LÊ COLUNA B) ---
