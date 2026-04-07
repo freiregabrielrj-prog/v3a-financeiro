@@ -1949,82 +1949,84 @@ elif st.session_state.pagina == "Receitas":
         st.error(f"Erro ao processar Evolução de Receita: {e}")
 
 
-#====================# QUADRO 5: GRÁFICO DE EVOLUÇÃO ANUAL (LINHA ESTÁTICA) #====================#
+#====================# QUADRO 5: GRÁFICO DE EVOLUÇÃO ANUAL (LINHA ESTÁTICA ABREVIADA) #====================#
 
-# Título com ajuste de margem negativa para aproximar do quadro anterior
-st.markdown("""
-    <div class="header-container" style="margin-top: -25px !important; margin-bottom: 5px !important;">
-        <div class="quadro-num">05.</div>
-        <div class="quadro-titulo">Gráfico de Evolução Anual</div>
-    </div>
-""", unsafe_allow_html=True)
 
-try:
-    # 1. Preparação dos dados (utiliza o df_evol gerado no Quadro 04)
-    if not df_evol.empty:
-        df_grafico_anual = df_evol[['TOTAL ANO']].reset_index()
-        df_grafico_anual.columns = ['Ano', 'Receita']
-        df_grafico_anual = df_grafico_anual.sort_values('Ano')
+    try:
+        if not df_evol.empty:
+            df_grafico_anual = df_evol[['TOTAL ANO']].reset_index()
+            df_grafico_anual.columns = ['Ano', 'Receita']
+            df_grafico_anual = df_grafico_anual.sort_values('Ano')
 
-        import plotly.graph_objects as go
+            import plotly.graph_objects as go
 
-        # 2. Criação do Gráfico de Linha
-        fig_evol_anual = go.Figure()
+            # 1. Função interna para abreviar os valores (Milhões e Milhares)
+            def abreviar_valor(n):
+                if n >= 1_000_000:
+                    return f"{n/1_000_000:.1f}M".replace('.', ',')
+                elif n >= 1_000:
+                    return f"{n/1_000:.0f}K".replace('.', ',')
+                return str(int(n))
 
-        fig_evol_anual.add_trace(go.Scatter(
-            x=df_grafico_anual['Ano'],
-            y=df_grafico_anual['Receita'],
-            mode='lines+markers+text',
-            text=df_grafico_anual['Receita'].apply(lambda x: f"R$ {fmt(x)}"),
-            textposition='top center',
-            line=dict(color='#FFCB05', width=4), # Amarelo V3A
-            marker=dict(
-                size=10, 
-                color='#1A1A1A', # Ponto Preto
-                line=dict(color='#FFCB05', width=2)
-            ),
-            hoverinfo='skip', # Hover desabilitado pois será um gráfico estático
-            name="Receita Anual"
-        ))
+            # 2. Criação do Gráfico
+            fig_evol_anual = go.Figure()
 
-        # 3. Estilização do Layout (Totalmente transparente e sem grades pesadas)
-        fig_evol_anual.update_layout(
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            margin=dict(l=30, r=30, t=50, b=10), # Margens para os valores não cortarem
-            height=350,
-            showlegend=False,
-            font=dict(family="Segoe UI", size=12),
-            xaxis=dict(
-                type='category',
-                showgrid=False,
-                linecolor='#E9ECEF',
-                tickfont=dict(weight='bold', color='#444')
-            ),
-            yaxis=dict(
-                showgrid=False, # Removido para visual limpo
-                showticklabels=False,
-                zeroline=False,
-                range=[0, df_grafico_anual['Receita'].max() * 1.35] # Respiro para o texto R$
+            fig_evol_anual.add_trace(go.Scatter(
+                x=df_grafico_anual['Ano'],
+                y=df_grafico_anual['Receita'],
+                mode='lines+markers+text',
+                # Aplicando a abreviação no texto que aparece no gráfico
+                text=df_grafico_anual['Receita'].apply(abreviar_valor),
+                textposition='top center',
+                line=dict(color='#FFCB05', width=4),
+                marker=dict(
+                    size=10, 
+                    color='#1A1A1A',
+                    line=dict(color='#FFCB05', width=2)
+                ),
+                hoverinfo='skip',
+                name="Receita Anual"
+            ))
+
+            # 3. Estilização do Layout
+            fig_evol_anual.update_layout(
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                margin=dict(l=30, r=30, t=50, b=10),
+                height=350,
+                showlegend=False,
+                font=dict(family="Segoe UI", size=13, color='#1A1A1A'), # Fonte levemente maior para os "M"
+                xaxis=dict(
+                    type='category',
+                    showgrid=False,
+                    linecolor='#E9ECEF',
+                    tickfont=dict(weight='bold', color='#444')
+                ),
+                yaxis=dict(
+                    showgrid=False,
+                    showticklabels=False,
+                    zeroline=False,
+                    # Margem de segurança para o texto "M" não cortar no topo
+                    range=[0, df_grafico_anual['Receita'].max() * 1.3] 
+                )
             )
-        )
 
-        # 4. Renderização Estática (Sem Zoom, Sem Menu, Sem Interação)
-        st.plotly_chart(
-            fig_evol_anual, 
-            use_container_width=True, 
-            config={
-                'staticPlot': True,        # Torna o gráfico estático (sem zoom/clique)
-                'displayModeBar': False,   # Remove a barra de ferramentas
-                'responsive': True
-            }
-        )
-        
-    else:
-        st.warning("Sem dados disponíveis para traçar a evolução com o filtro selecionado.")
+            # 4. Renderização Estática
+            st.plotly_chart(
+                fig_evol_anual, 
+                use_container_width=True, 
+                config={
+                    'staticPlot': True,
+                    'displayModeBar': False,
+                    'responsive': True
+                }
+            )
+            
+        else:
+            st.warning("Sem dados disponíveis para o filtro selecionado.")
 
-except Exception as e:
-    st.error(f"Erro ao gerar gráfico de evolução anual: {e}")
+    except Exception as e:
+        st.error(f"Erro ao gerar gráfico: {e}")
         
         
         
