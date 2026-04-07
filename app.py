@@ -933,7 +933,7 @@ if st.session_state.pagina == "DRE":
     except Exception as e:
         st.error(f"Erro ao processar Margem por Área: {e}")
 
-#====================# QUADRO 03: VISÃO EBITDA YOY 2026 x 2025 (FILTRO ABAIXO) #====================#
+#====================# QUADRO 03: VISÃO EBITDA YOY 2026 x 2025 (FILTRO ABAIXO E TRAVA DE DIGITAÇÃO) #====================#
     
     st.markdown('<div style="padding-top: 10px;"></div>', unsafe_allow_html=True)
     
@@ -945,9 +945,19 @@ if st.session_state.pagina == "DRE":
         </div>
     """, unsafe_allow_html=True)
         
-    # 2. Área de Filtro - Posicionada logo abaixo do título (Sem rótulo "Período")
+    # 2. Área de Filtro - Posicionada logo abaixo do título
     col_sel_eb, col_spacer_eb = st.columns([1.2, 2.8])
     with col_sel_eb:
+        # Injeção de CSS específico para este selectbox para desabilitar o teclado/digitação
+        st.markdown("""
+            <style>
+                div[data-testid="stSelectbox"]:has(div[data-baseweb="select"] button[aria-expanded]) input {
+                    pointer-events: none !important;
+                    caret-color: transparent !important;
+                }
+            </style>
+        """, unsafe_allow_html=True)
+
         mes_eb = st.selectbox(
             "", 
             meses_lista_full, 
@@ -1154,7 +1164,7 @@ elif st.session_state.pagina == "Orçamento":
         """, unsafe_allow_html=True)
 
 
-#====================# QUADRO 1: ORÇAMENTO YTD - ORÇADO X REALIZADO (FILTRO ABAIXO) #====================#
+#====================# QUADRO 1: ORÇAMENTO YTD - ORÇADO X REALIZADO (FILTRO ABAIXO E TRAVA DE DIGITAÇÃO) #====================#
     
     st.markdown('<div style="padding-top: 10px;"></div>', unsafe_allow_html=True) 
     
@@ -1162,13 +1172,23 @@ elif st.session_state.pagina == "Orçamento":
     st.markdown('<div class="header-container"><div class="quadro-num">01.</div><div class="quadro-titulo">Orçamento YTD - Orçado x Realizado</div></div>', unsafe_allow_html=True)
 
     # 2. Área de Filtro posicionada logo abaixo do título
-    col_sel, col_spacer = st.columns([1.2, 2.8]) # Largura ajustada para não ficar esticado no Desktop
+    col_sel, col_spacer = st.columns([1.2, 2.8]) 
     with col_sel:
+        # Injeção de CSS específico para desabilitar digitação no selectbox
+        st.markdown("""
+            <style>
+                div[data-testid="stSelectbox"]:has(div[data-baseweb="select"] button[aria-expanded]) input {
+                    pointer-events: none !important;
+                    caret-color: transparent !important;
+                }
+            </style>
+        """, unsafe_allow_html=True)
+
         mes_ytd = st.selectbox(
             "", 
             meses_lista_full, 
             index=index_fechamento, 
-            key=f"sel_ytd_new_pos_{index_fechamento}", 
+            key=f"sel_ytd_no_type_{index_fechamento}", 
             label_visibility="collapsed"
         )
             
@@ -1480,27 +1500,46 @@ elif st.session_state.pagina == "Orçamento":
     #====================# QUADRO 3: DASHBOARD ORÇADO X REALIZADO #====================#
     
     st.markdown('<div class="header-container"><div class="quadro-num">03.</div><div class="quadro-titulo">Dashboard Orçado x Realizado - Anual 2026</div></div>', unsafe_allow_html=True)
+    
     cc_labels_orc, cc_orcado_orc, cc_realizado_orc = [], [], []
     for _, row_dash in df_raw_orc_data.iterrows():
         lab_dash = str(row_dash.iloc[0]).strip()
         if normalize_id(lab_dash) in p_orc_l_names:
-            cc_labels_orc.append(lab_dash); cc_orcado_orc.append(abs(safe_float(row_dash.iloc[1]))); cc_realizado_orc.append(abs(safe_float(row_dash.iloc[3])))
+            cc_labels_orc.append(lab_dash)
+            cc_orcado_orc.append(abs(safe_float(row_dash.iloc[1])))
+            cc_realizado_orc.append(abs(safe_float(row_dash.iloc[3])))
+
     fig_dash = go.Figure()
     fig_dash.add_trace(go.Bar(x=cc_labels_orc, y=cc_orcado_orc, name='Orçado Anual', marker_color='#FDE085'))
     fig_dash.add_trace(go.Bar(x=cc_labels_orc, y=cc_realizado_orc, name='Realizado Anual', marker_color='#FFCB05'))
+    
     fig_dash.update_layout(
         template="simple_white", barmode='group', height=450, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
         title={'text': "Orçado Anual vs Realizado Anual por Centro de Custo - 2026", 'x': 0.5, 'xanchor': 'center'},
-        yaxis=dict(showgrid=True, gridcolor='#EEE', tickprefix="R$ "), xaxis=dict(showgrid=True, gridcolor='#EEE'), font=dict(family="Segoe UI"),
-        margin=dict(l=20, r=20, t=80, b=20)
-        )
-    st.plotly_chart(fig_dash, use_container_width=True, config={'displayModeBar': False})
+        yaxis=dict(showgrid=True, gridcolor='#EEE', tickprefix="R$ "), 
+        xaxis=dict(showgrid=True, gridcolor='#EEE'), 
+        font=dict(family="Segoe UI"),
+        margin=dict(l=20, r=20, t=80, b=20),
+        # DESABILITA O ZOOM VIA LAYOUT (DUPLA CAMADA DE SEGURANÇA)
+        dragmode=False 
+    )
+
+    # CONFIGURAÇÃO PARA REMOVER INTERAÇÃO DE ZOOM E PINÇA NO MOBILE
+    config_dash = {
+        'displayModeBar': False, # Remove a barra de ferramentas
+        'staticPlot': False,     # Se True, remove até os tooltips (opcional)
+        'scrollZoom': False,     # Desabilita zoom no scroll do mouse
+        'doubleClick': 'reset',  # Evita zoom no duplo clique
+        'responsive': True
+    }
+
+    st.plotly_chart(fig_dash, use_container_width=True, config=config_dash)
 
     # --- POSIÇÃO 2: OBSERVAÇÕES ORÇAMENTO ---
     st.markdown('<div style="margin-top: 40px;">' + render_obs_card(pd.DataFrame({"Orçamento": data["OBS_ORC"]}), "Orçamento") + '</div>', unsafe_allow_html=True)
 
-    st.write("") 
+    st.write("")
 
 
 #================= TERCEIRA PAGINA - RECEITAS =====================#
