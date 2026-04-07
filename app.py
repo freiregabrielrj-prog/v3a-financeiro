@@ -64,8 +64,8 @@ if not st.session_state.autenticado:
             
             /* --- AJUSTE MANUAL DE POSIÇÃO --- */
             margin-top: 20px !important;    /* Aumente para descer, diminua para subir */
-            margin-bottom: 50px !important;
-            margin-left: 230px !important;    /* Use para ajustes finos laterais */
+            margin-bottom: 0px !important;
+            margin-left: 0px !important;    /* Use para ajustes finos laterais */
         }
 
         [data-testid="stHeader"], [data-testid="stToolbar"], label {
