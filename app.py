@@ -112,30 +112,12 @@ if not st.session_state.autenticado:
     st.stop()
 
 
-# =================================================================
-# 3. CONFIGURAÇÃO DE NAVEGAÇÃO (PÓS-LOGIN)
-# =================================================================
-
-# Inicializa a página padrão logo após passar pelo login
-if "pagina" not in st.session_state:
-    st.session_state.pagina = "DRE" 
-
-# Aqui você insere a função do Menu com os botões amarelos que criamos
-def render_menu():
-    # ... código das 3 colunas e botões ...
-    pass
-
-render_menu()
-
-# Lógica para exibir o conteúdo
-if st.session_state.pagina == "DRE":
-    # Conteúdo da DRE...
-    pass
 
 
 # =================================================================
 # 3. CARREGAMENTO DE DADOS (Só inicia após o login)
 # =================================================================
+# Seu código de load_all_v3a_data() continua aqui...
         
     
     # Estrutura Visual
@@ -1095,7 +1077,6 @@ if st.session_state.pagina == "DRE":
 
     html_yoy += "</tbody></table></div></div>"
     st.components.v1.html(html_yoy, height=630, scrolling=False)
-    
     
 
     # --- POSIÇÃO 1: OBSERVAÇÕES DRE GERENCIAL (LÊ COLUNA B) ---
