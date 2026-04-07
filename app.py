@@ -933,11 +933,11 @@ if st.session_state.pagina == "DRE":
     except Exception as e:
         st.error(f"Erro ao processar Margem por Área: {e}")
 
-#====================# QUADRO 03: VISÃO EBITDA YOY 2026 x 2025 (TOTALMENTE CENTRALIZADO) #====================#
+#====================# QUADRO 03: VISÃO EBITDA YOY 2026 x 2025 (VERSÃO FINAL CONSOLIDADA) #====================#
     
     st.markdown('<div style="padding-top: 10px;"></div>', unsafe_allow_html=True)
     
-    # 1. Título Centralizado (Usa o CSS Global que configuramos anteriormente)
+    # 1. Título Centralizado (Baseado no seu CSS Global)
     st.markdown("""
         <div class="header-container">
             <div class="quadro-num">03.</div>
@@ -945,10 +945,10 @@ if st.session_state.pagina == "DRE":
         </div>
     """, unsafe_allow_html=True)
         
-    # 2. Filtro Centralizado (Usando 3 colunas para garantir o eixo central)
+    # 2. Filtro Centralizado (Proporção equilibrada para alinhamento central)
     col_spacer_L, col_sel_eb, col_spacer_R = st.columns([1.4, 1.2, 1.4]) 
     with col_sel_eb:
-        # Trava de digitação para mobile
+        # Trava de digitação para mobile e estilo do select
         st.markdown("""
             <style>
                 div[data-testid="stSelectbox"]:has(div[data-baseweb="select"] button[aria-expanded]) input {
@@ -962,10 +962,11 @@ if st.session_state.pagina == "DRE":
             "", 
             meses_lista_full, 
             index=index_fechamento, 
-            key=f"sel_eb_final_centered_{index_fechamento}", 
+            key=f"sel_eb_final_v3a_{index_fechamento}", 
             label_visibility="collapsed"
         )
 
+    # --- LÓGICA DE DADOS ---
     idx_eb = meses_lista_full.index(mes_eb)
     c_idx, e26, e25 = 7 + idx_eb, data["E26"], data["E25"]
     t_parents = ["+ Receita Bruta", "- Imposto IBS CBS (ISS PIS COFINS)", "= Receita Liquida", "- Custo", "= Lucro Bruto", "% Margem Bruta (sem IR e CSLL)", "% Sobre Receita Liquida (sem IR / CSLL)", "- Despesas", "= Ebitda", "% Sobre a Receita Liquida", "- Imposto IR CSLL", "+ - Outras Receitas E Despesas", "- Investimentos", "= Lucro Liquido", "% S/ Rec Liq"]
@@ -987,14 +988,14 @@ if st.session_state.pagina == "DRE":
                 background: #1A1A1A; 
                 color: #FFF; 
                 padding: 10px 5px; 
-                text-align: center !important; /* Força centralização */
+                text-align: center !important; 
                 vertical-align: middle !important;
                 white-space: nowrap; 
             }} 
             
             .y-table td {{ padding: 8px 10px; border-bottom: 1px solid #F0F0F0; text-align: center; }} 
 
-            /* PRIMEIRA COLUNA (CATEGORIAS) */
+            /* PRIMEIRA COLUNA (CATEGORIAS) - AJUSTE DESKTOP */
             .y-table th:first-child, .y-table td:first-child {{ 
                 text-align: left !important; 
                 font-weight: bold; 
@@ -1003,7 +1004,6 @@ if st.session_state.pagina == "DRE":
                 padding-right: 30px;
             }}
             
-            /* Título da primeira coluna também centralizado */
             .y-table thead th:first-child {{ text-align: center !important; }}
 
             .responsive-scroll-yoy {{ 
@@ -1013,15 +1013,22 @@ if st.session_state.pagina == "DRE":
                 -webkit-overflow-scrolling: touch !important;
             }}
 
+            /* --- CORREÇÃO MOBILE: LARGURA DAS COLUNAS --- */
             @media (max-width: 767px) {{
-                .y-table {{ width: max-content !important; min-width: 950px !important; }}
+                .y-table {{ 
+                    width: max-content !important; 
+                    min-width: 1100px !important; 
+                }}
                 .y-table th:first-child, .y-table td:first-child {{ 
-                    min-width: 180px !important; 
+                    min-width: 190px !important; 
                     white-space: normal !important; 
                     width: auto !important;
                     text-align: left !important;
                 }}
-                /* No mobile, manter o título da primeira coluna centralizado */
+                /* Padroniza largura das colunas numéricas no mobile */
+                .y-table th:not(:first-child), .y-table td:not(:first-child) {{
+                    min-width: 75px !important;
+                }}
                 .y-table thead th:first-child {{ text-align: center !important; }}
             }}
 
