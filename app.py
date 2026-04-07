@@ -914,11 +914,10 @@ if st.session_state.pagina == "DRE":
         st.error(f"Erro ao processar Margem por Área: {e}")
         
         
-#====================# QUADRO 03: VISÃO EBITDA YOY 2026 x 2025 (VERSÃO FINAL CONSOLIDADA) #====================#
+#====================# QUADRO 03: VISÃO EBITDA YOY 2026 x 2025 (CÁLCULOS DE % CORRIGIDOS) #====================#
     
     st.markdown('<div style="padding-top: 10px;"></div>', unsafe_allow_html=True)
     
-    # 1. Título Centralizado (Baseado no seu CSS Global)
     st.markdown("""
         <div class="header-container">
             <div class="quadro-num">03.</div>
@@ -926,19 +925,8 @@ if st.session_state.pagina == "DRE":
         </div>
     """, unsafe_allow_html=True)
         
-    # 2. Área de Filtro - ALINHADO À ESQUERDA [1.2, 2.8]
     col_sel_eb, col_spacer_eb = st.columns([1.2, 2.8]) 
     with col_sel_eb:
-        # Trava de digitação para mobile e estilo do select
-        st.markdown("""
-            <style>
-                div[data-testid="stSelectbox"]:has(div[data-baseweb="select"] button[aria-expanded]) input {
-                    pointer-events: none !important;
-                    caret-color: transparent !important;
-                }
-            </style>
-        """, unsafe_allow_html=True)
-        
         mes_eb = st.selectbox(
             "", 
             meses_lista_full, 
@@ -952,75 +940,32 @@ if st.session_state.pagina == "DRE":
     c_idx, e26, e25 = 7 + idx_eb, data["E26"], data["E25"]
     t_parents = ["+ Receita Bruta", "- Imposto IBS CBS (ISS PIS COFINS)", "= Receita Liquida", "- Custo", "= Lucro Bruto", "% Margem Bruta (sem IR e CSLL)", "% Sobre Receita Liquida (sem IR / CSLL)", "- Despesas", "= Ebitda", "% Sobre a Receita Liquida", "- Imposto IR CSLL", "+ - Outras Receitas E Despesas", "- Investimentos", "= Lucro Liquido", "% S/ Rec Liq"]
 
+    # Captura das linhas fundamentais para os cálculos de margem acumulada
+    try:
+        row_rl_26 = e26[e26.iloc[:,1].astype(str).str.strip() == "= Receita Liquida"].iloc[0]
+        row_rl_25 = e25[e25.iloc[:,1].astype(str).str.strip() == "= Receita Liquida"].iloc[0]
+        
+        row_lb_26 = e26[e26.iloc[:,1].astype(str).str.strip() == "= Lucro Bruto"].iloc[0]
+        row_lb_25 = e25[e25.iloc[:,1].astype(str).str.strip() == "= Lucro Bruto"].iloc[0]
+        
+        row_eb_26 = e26[e26.iloc[:,1].astype(str).str.strip() == "= Ebitda"].iloc[0]
+        row_eb_25 = e25[e25.iloc[:,1].astype(str).str.strip() == "= Ebitda"].iloc[0]
+        
+        row_ll_26 = e26[e26.iloc[:,1].astype(str).str.strip() == "= Lucro Liquido"].iloc[0]
+        row_ll_25 = e25[e25.iloc[:,1].astype(str).str.strip() == "= Lucro Liquido"].iloc[0]
+    except: pass
+
     html_yoy = f"""
     <div style="background-color: #FFFFFF; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; padding: 15px; margin-top: 10px; margin-bottom: 0px;">
         <style>
-            .y-table {{ 
-                border-collapse: collapse; 
-                color: #000; 
-                font-size: 11px; 
-                font-family: 'Segoe UI', sans-serif; 
-                width: 100%;
-                table-layout: auto;
-            }} 
-            
-            /* CENTRALIZAÇÃO TOTAL DOS HEADERS */
-            .y-table thead tr th {{ 
-                background: #1A1A1A; 
-                color: #FFF; 
-                padding: 10px 5px; 
-                text-align: center !important; 
-                vertical-align: middle !important;
-                white-space: nowrap; 
-            }} 
-            
+            .y-table {{ border-collapse: collapse; color: #000; font-size: 11px; font-family: 'Segoe UI', sans-serif; width: 100%; table-layout: auto; }} 
+            .y-table thead tr th {{ background: #1A1A1A; color: #FFF; padding: 10px 5px; text-align: center !important; vertical-align: middle !important; white-space: nowrap; }} 
             .y-table td {{ padding: 8px 10px; border-bottom: 1px solid #F0F0F0; text-align: center; }} 
-
-            /* PRIMEIRA COLUNA (CATEGORIAS) - AJUSTE DESKTOP */
-            .y-table th:first-child, .y-table td:first-child {{ 
-                text-align: left !important; 
-                font-weight: bold; 
-                width: 1%; 
-                white-space: nowrap;
-                padding-right: 30px;
-            }}
-            
-            .y-table thead th:first-child {{ text-align: center !important; }}
-
-            .responsive-scroll-yoy {{ 
-                width: 100% !important; 
-                overflow-x: auto !important; 
-                display: block !important;
-                -webkit-overflow-scrolling: touch !important;
-            }}
-
-            /* --- CORREÇÃO MOBILE DEFINITIVA (COLUNAS PADRONIZADAS) --- */
-            @media (max-width: 767px) {{
-                .y-table {{ 
-                    width: max-content !important; 
-                    min-width: 1150px !important; 
-                    table-layout: fixed !important; 
-                }}
-                .y-table th:first-child, .y-table td:first-child {{ 
-                    width: 190px !important; 
-                    min-width: 190px !important;
-                    white-space: normal !important; 
-                    text-align: left !important;
-                }}
-                /* Padroniza TODAS as 12 colunas numéricas com largura idêntica */
-                .y-table th:not(:first-child), .y-table td:not(:first-child) {{
-                    width: 80px !important;
-                    min-width: 80px !important;
-                    max-width: 80px !important;
-                }}
-                .y-table thead th:first-child {{ text-align: center !important; }}
-            }}
-
+            .y-table th:first-child, .y-table td:first-child {{ text-align: left !important; font-weight: bold; width: 1%; white-space: nowrap; padding-right: 30px; }}
+            .responsive-scroll-yoy {{ width: 100% !important; overflow-x: auto !important; display: block !important; -webkit-overflow-scrolling: touch !important; }}
             .y-yellow {{ background-color: #f0f0f0 !important; font-weight: bold; }} 
-            .y-yellow td {{ background-color: #f0f0f0 !important; }}
             .h-grp {{ text-align: center !important; font-weight: bold; border-bottom: 2px solid #FFF !important; font-size: 10px; }}
         </style>
-        
         <div class="responsive-scroll-yoy">
             <table class="y-table">
                 <thead>
@@ -1044,10 +989,43 @@ if st.session_state.pagina == "DRE":
             r25 = e25[e25.iloc[:,1].astype(str).str.strip() == target_eb].iloc[0]
             nm_eb = str(r26.iloc[1]).strip()
             is_p_eb = "%" in nm_eb or "Margem" in nm_eb
-            f26, f25 = safe_float(r26.iloc[c_idx]), safe_float(r25.iloc[c_idx])
-            a26 = sum([safe_float(v_val) for v_val in r26.iloc[7:c_idx+1]]); a25 = sum([safe_float(v_val) for v_val in r25.iloc[7:c_idx+1]])
-            t26, t25 = safe_float(r26.iloc[5]), safe_float(r25.iloc[5])
             
+            # --- VALORES MÊS ATUAL ---
+            f26, f25 = safe_float(r26.iloc[c_idx]), safe_float(r25.iloc[c_idx])
+            
+            # --- LÓGICA DE ACUMULADO E TOTAL ---
+            if not is_p_eb:
+                a26 = sum([safe_float(v) for v in r26.iloc[7:c_idx+1]])
+                a25 = sum([safe_float(v) for v in r25.iloc[7:c_idx+1]])
+                t26, t25 = safe_float(r26.iloc[5]), safe_float(r25.iloc[5])
+            else:
+                # CÁLCULO DE RECALIBRAGEM DOS ACUMULADOS (%)
+                # 1. Margem de Lucro Líquido
+                if "S/ Rec Liq" in nm_eb:
+                    a_num_26 = sum([safe_float(v) for v in row_ll_26.iloc[7:c_idx+1]])
+                    a_num_25 = sum([safe_float(v) for v in row_ll_25.iloc[7:c_idx+1]])
+                # 2. Margem EBITDA (Linha que você solicitou)
+                elif "Sobre a Receita Liquida" in nm_eb:
+                    a_num_26 = sum([safe_float(v) for v in row_eb_26.iloc[7:c_idx+1]])
+                    a_num_25 = sum([safe_float(v) for v in row_eb_25.iloc[7:c_idx+1]])
+                # 3. Margem Bruta
+                elif "Margem Bruta" in nm_eb or "Liquida (sem IR / CSLL)" in nm_eb:
+                    a_num_26 = sum([safe_float(v) for v in row_lb_26.iloc[7:c_idx+1]])
+                    a_num_25 = sum([safe_float(v) for v in row_lb_25.iloc[7:c_idx+1]])
+                else:
+                    a_num_26, a_num_25 = 0, 0
+
+                # Denominador comum: Receita Líquida Acumulada
+                a_den_26 = sum([safe_float(v) for v in row_rl_26.iloc[7:c_idx+1]])
+                a_den_25 = sum([safe_float(v) for v in row_rl_25.iloc[7:c_idx+1]])
+                
+                a26 = safe_div(a_num_26, a_den_26)
+                a25 = safe_div(a_num_25, a_den_25)
+                
+                # Para Total Ano em %, buscamos direto da coluna 5 do Excel (já consolidada)
+                t26, t25 = safe_float(r26.iloc[5]), safe_float(r25.iloc[5])
+
+            # Variações (Apenas para linhas de valor, em % fica n.a.)
             vfn, vfp = (fmt(f26-f25), fmt(safe_div(f26-f25, f25), True, False)) if not is_p_eb else ("n.a.", "n.a.")
             van, vap = (fmt(a26-a25), fmt(safe_div(a26-a25, a25), True, False)) if not is_p_eb else ("n.a.", "n.a.")
             vtn, vtp = (fmt(t26-t25), fmt(safe_div(t26-t25, t25), True, False)) if not is_p_eb else ("n.a.", "n.a.")
