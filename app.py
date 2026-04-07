@@ -288,7 +288,8 @@ def load_all_v3a_data():
         "ORC_YTD_BRUTO": pd.read_excel(xls, "Budget YTD", header=None),
         "OBS_DRE": lista_obs_dre,
         "OBS_ORC": lista_obs_orc,
-        "ATUALIZACAO": data_att_final 
+        "FOLLOW_ANOS": pd.read_excel(xls, "BASE FOLLOW ANOS"),
+        "ATUALIZACAO": data_att_final
     }
 
     abas_extras = {"DRE N1": "DRE N1", "DRE N2": "DRE N2", "DRE N3": "DRE N3", "DRE N4": "DRE N4", 
@@ -580,63 +581,59 @@ if st.session_state.pagina == "DRE":
         """, unsafe_allow_html=True)
 
 
-#====================# QUADRO 1: DRE GERENCIAL (VERSÃO FINAL RESPONSIVA) #====================#
+#====================# QUADRO 1: DRE GERENCIAL (CABEÇALHO CONGELADO) #====================#
     
     st.markdown('<div style="padding-top: 10px;"></div>', unsafe_allow_html=True)
 
-    # 1. Título em linha inteira (Número + Texto)
+    # 1. Título
     st.markdown('<div class="header-container"><div class="quadro-num">01.</div><div class="quadro-titulo">DRE Gerencial 2026</div></div>', unsafe_allow_html=True)
 
-    # 2. Área de Filtro (Selectbox abaixo do título, sem a palavra "Núcleo")
+    # 2. Área de Filtro
     col_sel_dre, col_spacer_dre = st.columns([1.2, 2.8])
     with col_sel_dre:
-        # Mapeamento das abas
         opcoes_dre = {
             "Total Geral": "DRE Gerencial",
-            "Núcleo 1": "DRE N1",
-            "Núcleo 2": "DRE N2",
-            "Núcleo 3": "DRE N3",
-            "Núcleo 4": "DRE N4",
-            "Núcleo 5": "DRE N5",
-            "Núcleo 6": "DRE N6",
-            "Núcleo 7": "DRE N7",
-            "Núcleo 8": "DRE N8",
-            "Ventures - Outros": "DRE VENTURES - OUTROS"
+            "Núcleo 1": "DRE N1", "Núcleo 2": "DRE N2", "Núcleo 3": "DRE N3",
+            "Núcleo 4": "DRE N4", "Núcleo 5": "DRE N5", "Núcleo 6": "DRE N6",
+            "Núcleo 7": "DRE N7", "Núcleo 8": "DRE N8", "Ventures - Outros": "DRE VENTURES - OUTROS"
         }
         
         selecao_label = st.selectbox(
-            "", # Rótulo removido para ficar mais limpo
+            "", 
             list(opcoes_dre.keys()), 
             index=0,
-            key="selector_dre_global_final",
+            key="selector_dre_freeze_head",
             label_visibility="collapsed"
         )
-        
         aba_selecionada = opcoes_dre[selecao_label]
 
-    # --- LÓGICA DE DADOS DA DRE ---
+    # --- LÓGICA DE DADOS ---
     df_dre = data[aba_selecionada].copy()
-    
     map_abr_cols = {v: meses_abr[k] for k, v in meses_pt.items()}
     df_dre.columns = [map_abr_cols.get(str(col).strip(), str(col)) for col in df_dre.columns]
 
     parents_dre = ["+ Receita Bruta", "- Custo", "- Imposto", "- Despesas", "+ Outras Receitas", "- Outras Despesas", "- Investimentos"]
     subs_hierarquia = ["ondemand", "ventures"]
 
-    # RENDERIZAÇÃO DO HTML
+    # HTML COM CABEÇALHO STICKY
     html_dre = f"""
         <div style="background-color: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; padding: 15px; margin-top: 10px; margin-bottom: 40px;">
             <style>
-                /* CONFIGURAÇÃO BASE DA TABELA */
+                .responsive-scroll-dre {{ 
+                    max-height: 550px; 
+                    overflow: auto !important; 
+                    position: relative;
+                }}
+
                 .v3a-table {{ 
-                    border-collapse: collapse; 
-                    color: #000; 
+                    border-collapse: separate; 
+                    border-spacing: 0;
+                    width: 100%;
                     font-size: 11px; 
                     font-family: 'Segoe UI', sans-serif; 
-                    table-layout: auto !important;
                 }} 
                 
-                /* CABEÇALHOS CENTRALIZADOS */
+                /* CONGELAR APENAS O CABEÇALHO */
                 .v3a-table thead tr th {{ 
                     background: #1A1A1A; 
                     color: #FFF; 
@@ -645,71 +642,32 @@ if st.session_state.pagina == "DRE":
                     white-space: nowrap; 
                     position: sticky;
                     top: 0;
-                    z-index: 10;
+                    z-index: 100;
+                    border-bottom: 2px solid #333;
                 }} 
                 
-                .v3a-table td {{ padding: 8px 10px; border-bottom: 1px solid #F0F0F0; text-align: center; white-space: nowrap; }} 
+                .v3a-table td {{ padding: 8px 10px; border-bottom: 1px solid #F0F0F0; text-align: center; }} 
+                .v3a-table th, .v3a-table td {{ min-width: 80px; }}
 
-                /* FORÇAR COLUNAS A NÃO ENCOLHER */
-                .v3a-table th, .v3a-table td {{ min-width: 75px; }}
-
-                /* PRIMEIRA COLUNA: Células à esquerda */
-                .v3a-table thead th:first-child {{ 
-                    text-align: center !important; 
-                    width: 200px !important; 
-                    min-width: 180px !important;
-                    white-space: normal !important; 
-                }} 
-                
+                /* Primeira Coluna (Sem congelar, apenas alinhada) */
                 .v3a-table td:first-child {{ 
                     text-align: left !important; 
                     font-weight: bold; 
+                    min-width: 200px !important;
                     white-space: normal !important; 
-                    min-width: 180px !important; 
                 }} 
 
-                /* ELEMENTOS VISUAIS E HIERARQUIA */
                 .row-parent {{ background-color: #FFFFFF !important; font-weight: bold; cursor: pointer; }} 
                 .row-sub {{ background-color: #FFFFFF !important; font-weight: bold; cursor: pointer; display: none; }} 
                 .row-child-dre {{ background-color: #FFFFFF !important; display: none; }} 
                 .arrow {{ display: inline-block; width: 15px; color: #666; font-size: 10px; }}
-                
                 .indent-sub {{ padding-left: 20px !important; }}
                 .indent-child {{ padding-left: 35px !important; font-weight: normal !important; color: #666; }}
 
-                /* LINHAS DE RESULTADO (NUVEM) */
-                .row-result-dre {{ background-color: #f0f0f0 !important; font-weight: bold; }}
-                .row-result-dre td {{ background-color: #f0f0f0 !important; }}
+                .row-result-dre, .row-result-dre td {{ background-color: #f0f0f0 !important; font-weight: bold; }}
 
-                /* CONTAINER DE SCROLL */
-                .responsive-scroll-dre {{ 
-                    width: 100% !important; 
-                    overflow-x: auto !important; 
-                    overflow-y: hidden !important;
-                    display: block !important;
-                    -webkit-overflow-scrolling: touch !important;
-                }}
-
-                /* --- COMPORTAMENTO DESKTOP --- */
-                @media (min-width: 768px) {{
-                    .v3a-table {{
-                        width: 100% !important;
-                        min-width: 100% !important;
-                    }}
-                    .responsive-scroll-dre table {{
-                        display: table !important;
-                    }}
-                }}
-
-                /* --- COMPORTAMENTO MOBILE --- */
                 @media (max-width: 767px) {{
-                    .v3a-table {{ 
-                        width: max-content !important; 
-                        min-width: 950px !important; 
-                    }}
-                    .responsive-scroll-dre table {{
-                        display: block !important;
-                    }}
+                    .v3a-table {{ width: max-content !important; min-width: 1000px !important; }}
                 }}
             </style>
             
@@ -773,16 +731,12 @@ if st.session_state.pagina == "DRE":
             html_dre += f'<td>{fmt(v, is_pct=is_pct)}</td>'
         html_dre += '</tr>'
 
-    html_dre += """
-                    </tbody>
-                </table>
-            </div> 
-        </div> """
+    html_dre += """</tbody></table></div></div>"""
 
-    st.components.v1.html(html_dre, height=550, scrolling=False)
+    st.components.v1.html(html_dre, height=600, scrolling=True)
 
 
-#====================# QUADRO 2: MARGEM BRUTA POR ÁREA 2026 (VERSÃO MOBILE OK) #====================#
+#====================# QUADRO 2: MARGEM BRUTA POR ÁREA 2026 (CABEÇALHO CONGELADO) #====================#
     
     st.markdown('<div style="padding-top: 10px;"></div>', unsafe_allow_html=True) 
     st.markdown("""
@@ -793,7 +747,7 @@ if st.session_state.pagina == "DRE":
     """, unsafe_allow_html=True)
 
     try:
-        # 1. Carregamento e Normalização (Mantendo sua lógica original)
+        # 1. Carregamento e Normalização
         df_ma_origem = pd.read_excel("dados_dre.xlsx", sheet_name="Margem por Faixa", skiprows=18)
         df_ma_origem = df_ma_origem.loc[:, ~df_ma_origem.columns.str.contains('^Unnamed')]
 
@@ -829,29 +783,55 @@ if st.session_state.pagina == "DRE":
                 "clientes": df_cli_group.to_dict('records')
             }
 
-        # 3. HTML / CSS / JS (APLICANDO A CLÍNICA DO QUADRO 04)
+        # 3. HTML / CSS / JS (Com Cabeçalho Congelado)
         html_ma = f"""
-        <div style="background-color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; margin-bottom: 40px;">
+        <div style="background-color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; margin-top: 10px; margin-bottom: 40px;">
             <style>
-                /* CLINICA QUADRO 04: Fonte 11px e Scroll Touch */
-                .ma-table {{ width: 100%; border-collapse: collapse; color: #000; font-size: 11px; font-family: 'Segoe UI', sans-serif; }}
-                .ma-table thead th {{ position: sticky; top: 0; z-index: 10; background: #1A1A1A; color: #FFF; padding: 10px 5px; text-align: center; white-space: nowrap; }}
+                .responsive-scroll-ma {{ 
+                    max-height: 500px; 
+                    overflow: auto !important; 
+                    position: relative;
+                }}
+
+                .ma-table {{ 
+                    width: 100%; 
+                    border-collapse: separate; 
+                    border-spacing: 0;
+                    color: #000; 
+                    font-size: 11px; 
+                    font-family: 'Segoe UI', sans-serif; 
+                }}
                 
-                /* Controle de largura da primeira coluna */
-                .ma-table td:first-child {{ text-align: left; width: 160px; font-weight: bold; white-space: normal; }}
+                /* CONGELAR CABEÇALHO */
+                .ma-table thead th {{ 
+                    position: sticky; 
+                    top: 0; 
+                    z-index: 100; 
+                    background: #1A1A1A; 
+                    color: #FFF; 
+                    padding: 10px 5px; 
+                    text-align: center; 
+                    white-space: nowrap;
+                    border-bottom: 2px solid #333;
+                }}
+                
                 .ma-table td {{ padding: 8px 5px; border-bottom: 1px solid #F0F0F0; white-space: nowrap; text-align: center; }}
                 
+                /* Alinhamento primeira coluna */
+                .ma-table td:first-child {{ 
+                    text-align: left; 
+                    width: 180px; 
+                    font-weight: bold; 
+                    white-space: normal; 
+                }}
+                
                 .row-cli-ma {{ background-color: #FFFFFF !important; display: none; font-size: 10px; color: #666; }}
-                .row-total-final-ma {{ background-color: #f0f0f0 !important; font-weight: bold; color: #000 !important; }}
+                .row-total-final-ma, .row-total-final-ma td {{ background-color: #f0f0f0 !important; font-weight: bold; color: #000 !important; }}
                 .arr-ma {{ display: inline-block; width: 15px; color: #666; font-size: 10px; transition: 0.2s; }}
                 .indent-cli {{ padding-left: 20px !important; font-weight: normal; font-style: italic; }}
 
-                /* DIV DE SCROLL IGUAL AO QUADRO 04 */
-                .responsive-scroll-ma {{ 
-                    width: 100%; 
-                    overflow-x: auto !important; 
-                    -webkit-overflow-scrolling: touch; 
-                    display: block;
+                @media (max-width: 767px) {{
+                    .ma-table {{ width: max-content !important; min-width: 900px !important; }}
                 }}
             </style>
             
@@ -932,7 +912,8 @@ if st.session_state.pagina == "DRE":
 
     except Exception as e:
         st.error(f"Erro ao processar Margem por Área: {e}")
-
+        
+        
 #====================# QUADRO 03: VISÃO EBITDA YOY 2026 x 2025 (VERSÃO FINAL CONSOLIDADA) #====================#
     
     st.markdown('<div style="padding-top: 10px;"></div>', unsafe_allow_html=True)
@@ -1314,7 +1295,7 @@ elif st.session_state.pagina == "Orçamento":
     
     
 
-#====================# QUADRO 2: ORÇAMENTO ANUAL (VERSÃO FINAL RESPONSIVA) #====================#
+#====================# QUADRO 2: ORÇAMENTO ANUAL (CABEÇALHO CONGELADO) #====================#
     
     st.markdown('<div class="header-container" style="margin-top: 20px;"><div class="quadro-num">02.</div><div class="quadro-titulo">Orçamento Anual</div></div>', unsafe_allow_html=True)
     
@@ -1326,89 +1307,57 @@ elif st.session_state.pagina == "Orçamento":
     html_orc_final = f"""
         <div style="background-color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; margin-bottom: 40px;">
             <style>
-                /* CONFIGURAÇÃO BASE DA TABELA */
+                .responsive-scroll-anual {{ 
+                    max-height: 550px; 
+                    overflow: auto !important; 
+                    position: relative;
+                    width: 100%;
+                }}
+
                 .v3a-table-o {{ 
-                    border-collapse: collapse; 
+                    border-collapse: separate; 
+                    border-spacing: 0;
                     color: #000; 
                     font-size: 11px; 
                     font-family: 'Segoe UI', sans-serif; 
-                    table-layout: auto !important;
+                    width: 100%;
                 }} 
                 
-                /* CENTRALIZAÇÃO DOS TÍTULOS */
+                /* CONGELAR CABEÇALHO */
                 .v3a-table-o thead th {{ 
                     position: sticky; 
                     top: 0; 
-                    z-index: 10; 
+                    z-index: 100; 
                     background: #1A1A1A; 
                     color: #FFF; 
                     padding: 10px 4px; 
                     text-align: center !important; 
-                    white-space: nowrap; 
+                    white-space: nowrap;
+                    border-bottom: 2px solid #333;
                 }} 
                 
                 .v3a-table-o td {{ padding: 8px 4px; border-bottom: 1px solid #F0F0F0; white-space: nowrap; text-align: center; }} 
-
-                /* FORÇAR COLUNAS A NÃO ENCOLHER */
-                .v3a-table-o th, .v3a-table-o td {{ min-width: 75px; }}
+                .v3a-table-o th, .v3a-table-o td {{ min-width: 80px; }}
                 
-                /* PRIMEIRA COLUNA: Título centralizado e Células à esquerda */
-                .v3a-table-o thead th:first-child {{ 
-                    text-align: center !important; 
-                    width: 200px !important; 
-                    min-width: 180px !important;
-                    white-space: normal !important; 
-                }} 
-                
+                /* Primeira Coluna alinhada à esquerda */
                 .v3a-table-o td:first-child {{ 
                     text-align: left !important; 
                     font-weight: bold; 
+                    min-width: 200px !important;
                     white-space: normal !important; 
-                    min-width: 180px !important; 
                 }} 
 
-                /* ELEMENTOS VISUAIS E HIERARQUIA */
                 .row-p1-orc {{ background-color: #FFFFFF !important; font-weight: bold; cursor: pointer; }} 
                 .row-p2-orc {{ background-color: #FFFFFF !important; font-weight: bold; cursor: pointer; display: none; }} 
                 .row-child-o-orc {{ background-color: #FFFFFF !important; display: none; }} 
                 
-                /* AJUSTE: Seta na cor cinza escuro igual a DRE Gerencial */
                 .arrow-o-orc {{ display: inline-block; width: 15px; color: #666; font-size: 10px; }}
-                
                 .indent-orc-p2 {{ padding-left: 20px !important; font-weight: normal !important; }}
                 .indent-orc-neta {{ padding-left: 35px !important; font-weight: normal !important; font-style: italic; color: #666; font-size: 10px; }}
-                
                 .has-tooltip {{ border-bottom: 1px dotted #B8860B; cursor: help; display: inline-block; }}
 
-                /* CONTAINER DE SCROLL */
-                .responsive-scroll-anual {{ 
-                    width: 100% !important; 
-                    overflow-x: auto !important; 
-                    overflow-y: hidden !important;
-                    display: block !important;
-                    -webkit-overflow-scrolling: touch !important;
-                }}
-
-                /* COMPORTAMENTO DESKTOP */
-                @media (min-width: 768px) {{
-                    .v3a-table-o {{
-                        width: 100% !important;
-                        min-width: 100% !important;
-                    }}
-                    .responsive-scroll-anual table {{
-                        display: table !important;
-                    }}
-                }}
-
-                /* COMPORTAMENTO MOBILE */
                 @media (max-width: 767px) {{
-                    .v3a-table-o {{ 
-                        width: max-content !important; 
-                        min-width: 1100px !important; 
-                    }}
-                    .responsive-scroll-anual table {{
-                        display: block !important;
-                    }}
+                    .v3a-table-o {{ width: max-content !important; min-width: 1100px !important; }}
                 }}
             </style>
             
@@ -1474,6 +1423,7 @@ elif st.session_state.pagina == "Orçamento":
     html_orc_final += "</tbody></table></div></div>"
     
     st.components.v1.html(html_orc_final, height=500, scrolling=True)
+    
     
     
     #====================# QUADRO 3: DASHBOARD ORÇADO X REALIZADO #====================#
@@ -1863,7 +1813,212 @@ elif st.session_state.pagina == "Receitas":
 
     except Exception as e:
         st.error(f"Erro ao gerar gráfico de pizza: {e}")
+        
+        
+        
+    #====================# QUADRO 4: EVOLUÇÃO DE RECEITA (HISTÓRICO ANUAL) #====================#
 
+    st.markdown('<div style="padding-top: 20px;"></div>', unsafe_allow_html=True)
+
+    # 1. Título Padrão
+    st.markdown("""
+        <div class="header-container">
+            <div class="quadro-num">04.</div>
+            <div class="quadro-titulo">Evolução de Receita</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    try:
+        # 2. Filtro em formato de BOTÕES (Igual ao TOP 10)
+        # Definimos as opções e capturamos a seleção
+        opcoes_vertical = ["Todos", "On Demand", "Ventures"]
+        
+        # CSS para garantir que o rádio/segmented ocupe o espaço correto
+        st.markdown('<style>div[data-testid="stSegmentedControl"] { margin-bottom: 10px; }</style>', unsafe_allow_html=True)
+        
+        unidade_evol = st.segmented_control(
+            "Selecionar Unidade",
+            options=opcoes_vertical,
+            default="Todos",
+            key="seg_evol_receita_vertical",
+            label_visibility="collapsed"
+        )
+
+        # 3. Processamento de Dados
+        df_follow = data["FOLLOW_ANOS"].copy()
+        
+        # Índices: H(7)=Data, X(23)=Vertical, N(13)=Receita
+        col_data_ref = df_follow.columns[7]
+        col_vertical = df_follow.columns[23]
+        col_receita_ref = df_follow.columns[13]
+
+        # Tratamento de Data
+        df_follow[col_data_ref] = pd.to_datetime(df_follow[col_data_ref], errors='coerce')
+        df_follow = df_follow.dropna(subset=[col_data_ref])
+
+        # Aplicar Filtro Baseado no Botão Selecionado
+        if unidade_evol != "Todos":
+            df_follow = df_follow[df_follow[col_vertical].astype(str).str.upper() == unidade_evol.upper()]
+
+        # Extração de Ano e Mês
+        df_follow['Ano_Ref'] = df_follow[col_data_ref].dt.year.astype(int)
+        map_meses_pt = {
+            1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril", 5: "Maio", 6: "Junho",
+            7: "Julho", 8: "Agosto", 9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro"
+        }
+        df_follow['Mes_Nome'] = df_follow[col_data_ref].dt.month.map(map_meses_pt)
+
+        # Tabela Dinâmica
+        df_evol = df_follow.pivot_table(
+            index='Ano_Ref', 
+            columns='Mes_Nome', 
+            values=col_receita_ref, 
+            aggfunc='sum'
+        ).fillna(0)
+
+        # Ordenação Cronológica
+        meses_ordem = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", 
+                    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
+        colunas_existentes = [m for m in meses_ordem if m in df_evol.columns]
+        
+        if not df_evol.empty:
+            df_evol = df_evol[colunas_existentes]
+            df_evol['TOTAL ANO'] = df_evol.sum(axis=1)
+            df_evol = df_evol.sort_index(ascending=False)
+
+        # 4. Renderização HTML com Cabeçalho e Coluna Ano Congelados
+        html_evol = f"""
+        <div style="background-color: #FFFFFF; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; padding: 15px; margin-top: 5px; margin-bottom: 40px;">
+            <style>
+                .container-evol {{ 
+                    width: 100%; 
+                    max-height: 480px; 
+                    overflow: auto !important; 
+                    position: relative;
+                    -webkit-overflow-scrolling: touch;
+                }}
+                .table-evol {{ 
+                    width: 100%; 
+                    border-collapse: separate; 
+                    border-spacing: 0; 
+                    font-size: 11px; 
+                    font-family: 'Segoe UI', sans-serif; 
+                    color: #000;
+                }}
+                .table-evol thead th {{ 
+                    position: sticky; top: 0; z-index: 100; 
+                    background: #1A1A1A; color: #FFF; 
+                    padding: 12px 8px; text-align: center; 
+                    white-space: nowrap; border-bottom: 2px solid #333;
+                }}
+                .table-evol td:first-child, .table-evol th:first-child {{
+                    position: sticky; left: 0; z-index: 50; 
+                    background: #FFF; font-weight: bold; 
+                    border-right: 2px solid #F0F0F0; min-width: 80px;
+                }}
+                .table-evol th:first-child {{ z-index: 110; background: #1A1A1A; }}
+                .table-evol td {{ padding: 10px 8px; border-bottom: 1px solid #F0F0F0; text-align: center; white-space: nowrap; }}
+                .table-evol td:last-child {{ font-weight: bold; background-color: #F8F9FA; border-left: 1px solid #E9ECEF; }}
+                
+                @media (max-width: 767px) {{
+                    .table-evol {{ width: max-content !important; min-width: 1000px !important; }}
+                }}
+            </style>
+            <div class="container-evol">
+                <table class="table-evol">
+                    <thead>
+                        <tr>
+                            <th>Ano</th>
+                            {" ".join([f"<th>{m[:3].upper()}</th>" for m in colunas_existentes])}
+                            <th style="background: #333;">TOTAL ANO</th>
+                        </tr>
+                    </thead>
+                    <tbody>"""
+
+        for ano, row in df_evol.iterrows():
+            html_evol += f"<tr><td>{int(ano)}</td>"
+            for m in colunas_existentes:
+                html_evol += f"<td>{fmt(row[m])}</td>"
+            html_evol += f"<td>{fmt(row['TOTAL ANO'])}</td></tr>"
+
+        html_evol += "</tbody></table></div></div>"
+        
+        st.components.v1.html(html_evol, height=400, scrolling=False)
+
+    except Exception as e:
+        st.error(f"Erro ao processar Evolução de Receita: {e}")
+
+
+#====================# QUADRO 5: GRÁFICO DE EVOLUÇÃO ANUAL (LINHA) #====================#
+    st.markdown('<div style="padding-top: 10px;"></div>', unsafe_allow_html=True)
+    st.markdown("""
+        <div class="header-container">
+            <div class="quadro-num">05.</div>
+            <div class="quadro-titulo">Gráfico de Evolução Anual</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    try:
+        # 1. Preparação dos dados
+        if not df_evol.empty:
+            df_grafico_anual = df_evol[['TOTAL ANO']].reset_index()
+            df_grafico_anual.columns = ['Ano', 'Receita']
+            df_grafico_anual = df_grafico_anual.sort_values('Ano')
+
+            import plotly.graph_objects as go
+
+            # 2. Criação do Gráfico de Linha
+            fig_evol_anual = go.Figure()
+
+            fig_evol_anual.add_trace(go.Scatter(
+                x=df_grafico_anual['Ano'],
+                y=df_grafico_anual['Receita'],
+                mode='lines+markers+text',
+                text=df_grafico_anual['Receita'].apply(lambda x: f"R$ {fmt(x)}"),
+                textposition='top center',
+                line=dict(color='#FFCB05', width=4),
+                marker=dict(
+                    size=10, 
+                    color='#1A1A1A',
+                    line=dict(color='#FFCB05', width=2)
+                ),
+                hovertemplate="<b>Ano %{x}</b><br>Receita: R$ %{text}<extra></extra>",
+                name="Receita Anual"
+            ))
+
+            # 3. Estilização do Layout (Fundo Transparente)
+            fig_evol_anual.update_layout(
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                margin=dict(l=20, r=20, t=40, b=10),
+                height=400,
+                showlegend=False,
+                font=dict(family="Segoe UI", size=12),
+                xaxis=dict(
+                    type='category',
+                    showgrid=False,
+                    linecolor='#E9ECEF',
+                    tickfont=dict(weight='bold')
+                ),
+                yaxis=dict(
+                    showgrid=True,
+                    gridcolor='#F0F0F0',
+                    showticklabels=False,
+                    range=[0, df_grafico_anual['Receita'].max() * 1.3] # Espaço para o texto não cortar
+                )
+            )
+
+            # 4. Renderização Direta (Sem o card branco)
+            st.plotly_chart(fig_evol_anual, use_container_width=True, config={'displayModeBar': False})
+            
+        else:
+            st.warning("Sem dados disponíveis para traçar a evolução com o filtro selecionado.")
+
+    except Exception as e:
+        st.error(f"Erro ao gerar gráfico de evolução anual: {e}")
+        
+        
+        
 
 # --- INÍCIO DO BLOCO DE RODAPÉ PERSONALIZADO (SOLUÇÃO DEFINITIVA) ---
 import base64
