@@ -112,12 +112,30 @@ if not st.session_state.autenticado:
     st.stop()
 
 
+# =================================================================
+# 3. CONFIGURAÇÃO DE NAVEGAÇÃO (PÓS-LOGIN)
+# =================================================================
+
+# Inicializa a página padrão logo após passar pelo login
+if "pagina" not in st.session_state:
+    st.session_state.pagina = "DRE" 
+
+# Aqui você insere a função do Menu com os botões amarelos que criamos
+def render_menu():
+    # ... código das 3 colunas e botões ...
+    pass
+
+render_menu()
+
+# Lógica para exibir o conteúdo
+if st.session_state.pagina == "DRE":
+    # Conteúdo da DRE...
+    pass
 
 
 # =================================================================
 # 3. CARREGAMENTO DE DADOS (Só inicia após o login)
 # =================================================================
-# Seu código de load_all_v3a_data() continua aqui...
         
     
     # Estrutura Visual
@@ -945,8 +963,8 @@ if st.session_state.pagina == "DRE":
         </div>
     """, unsafe_allow_html=True)
         
-    # 2. Filtro Centralizado (Proporção equilibrada para alinhamento central)
-    col_spacer_L, col_sel_eb, col_spacer_R = st.columns([1.4, 1.2, 1.4]) 
+    # 2. Área de Filtro - ALINHADO À ESQUERDA [1.2, 2.8]
+    col_sel_eb, col_spacer_eb = st.columns([1.2, 2.8]) 
     with col_sel_eb:
         # Trava de digitação para mobile e estilo do select
         st.markdown("""
@@ -962,7 +980,7 @@ if st.session_state.pagina == "DRE":
             "", 
             meses_lista_full, 
             index=index_fechamento, 
-            key=f"sel_eb_final_v3a_vfinal_{index_fechamento}", 
+            key=f"sel_eb_final_v3a_left_{index_fechamento}", 
             label_visibility="collapsed"
         )
 
@@ -1013,12 +1031,12 @@ if st.session_state.pagina == "DRE":
                 -webkit-overflow-scrolling: touch !important;
             }}
 
-            /* --- CORREÇÃO MOBILE DEFINITIVA --- */
+            /* --- CORREÇÃO MOBILE DEFINITIVA (COLUNAS PADRONIZADAS) --- */
             @media (max-width: 767px) {{
                 .y-table {{ 
                     width: max-content !important; 
                     min-width: 1150px !important; 
-                    table-layout: fixed !important; /* Força a obediência às larguras abaixo */
+                    table-layout: fixed !important; 
                 }}
                 .y-table th:first-child, .y-table td:first-child {{ 
                     width: 190px !important; 
@@ -1077,6 +1095,7 @@ if st.session_state.pagina == "DRE":
 
     html_yoy += "</tbody></table></div></div>"
     st.components.v1.html(html_yoy, height=630, scrolling=False)
+    
     
 
     # --- POSIÇÃO 1: OBSERVAÇÕES DRE GERENCIAL (LÊ COLUNA B) ---
