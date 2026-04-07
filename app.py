@@ -1738,7 +1738,7 @@ elif st.session_state.pagina == "Receitas":
                 </div>
             </div>"""
 
-            st.components.v1.html(html_top10, height=530, scrolling=False)
+            st.components.v1.html(html_top10, height=350, scrolling=False)
 
     except Exception as e:
         st.error(f"Erro ao carregar Top 10 Clientes: {e}")
