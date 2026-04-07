@@ -1552,7 +1552,7 @@ elif st.session_state.pagina == "Receitas":
 
     #====================# 02. TOP 10 CLIENTES (VERSÃO FINAL RESPONSIVA) #====================#
     
-    st.markdown('<div style="padding-top: 10px;"></div>', unsafe_allow_html=True)
+    st.markdown('<div style="padding-top: 40px;"></div>', unsafe_allow_html=True)
 
     # 1. Título em linha inteira (Número + Texto)
     st.markdown('<div class="header-container"><div class="quadro-num">01.</div><div class="quadro-titulo">Top 10 Clientes</div></div>', unsafe_allow_html=True)
