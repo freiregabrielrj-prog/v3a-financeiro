@@ -580,14 +580,16 @@ if st.session_state.pagina == "DRE":
         """, unsafe_allow_html=True)
 
 
-#====================# QUADRO 1: DRE GERENCIAL (VERSÃO OTIMIZADA MOBILE) #====================#
+#====================# QUADRO 1: DRE GERENCIAL (VERSÃO FINAL RESPONSIVA) #====================#
     
-    col_dre_t, col_dre_s = st.columns([3.2, 1], gap="small", vertical_alignment="bottom")
+    st.markdown('<div style="padding-top: 10px;"></div>', unsafe_allow_html=True)
 
-    with col_dre_t:
-        st.markdown('<div class="header-container" style="margin-top: 0px; padding-top: 0px; margin-bottom: 5px;"><div class="quadro-num">01.</div><div class="quadro-titulo">DRE Gerencial 2026</div></div>', unsafe_allow_html=True)
+    # 1. Título em linha inteira (Número + Texto)
+    st.markdown('<div class="header-container"><div class="quadro-num">01.</div><div class="quadro-titulo">DRE Gerencial 2026</div></div>', unsafe_allow_html=True)
 
-    with col_dre_s:
+    # 2. Área de Filtro (Selectbox abaixo do título, sem a palavra "Núcleo")
+    col_sel_dre, col_spacer_dre = st.columns([1.2, 2.8])
+    with col_sel_dre:
         # Mapeamento das abas
         opcoes_dre = {
             "Total Geral": "DRE Gerencial",
@@ -602,19 +604,13 @@ if st.session_state.pagina == "DRE":
             "Ventures - Outros": "DRE VENTURES - OUTROS"
         }
         
-        c1dre, c2dre, c3dre = st.columns([0.6, 1.2, 1.0], vertical_alignment="bottom")
-        
-        with c1dre:
-            st.markdown('<div style="padding-bottom: 8px; text-align: right;"><span class="periodo-label" style="font-size: 13px;">Núcleo:</span></div>', unsafe_allow_html=True)
-        
-        with c2dre:
-            selecao_label = st.selectbox(
-                "Núcleo", 
-                list(opcoes_dre.keys()), 
-                index=0,
-                key="selector_dre_global_final",
-                label_visibility="collapsed"
-            )
+        selecao_label = st.selectbox(
+            "", # Rótulo removido para ficar mais limpo
+            list(opcoes_dre.keys()), 
+            index=0,
+            key="selector_dre_global_final",
+            label_visibility="collapsed"
+        )
         
         aba_selecionada = opcoes_dre[selecao_label]
 
@@ -629,30 +625,91 @@ if st.session_state.pagina == "DRE":
 
     # RENDERIZAÇÃO DO HTML
     html_dre = f"""
-        {shared_card_style}
-        <div class="v3a-card" style="margin-top: 0px; padding: 15px !important;">
+        <div style="background-color: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; padding: 15px; margin-top: 10px; margin-bottom: 40px;">
             <style>
-                /* CLINICA QUADRO 04: Fonte 11px e Scroll Touch */
-                .v3a-table {{ width: 100%; border-collapse: collapse; color: #000; font-size: 11px; font-family: 'Segoe UI', sans-serif; }} 
-                .v3a-table th {{ position: sticky; top: 0; z-index: 10; background: #1A1A1A; color: #FFF; padding: 10px 5px; text-align: center; white-space: nowrap; }} 
-                .v3a-table thead th:first-child {{ text-align: center !important; }}
+                /* CONFIGURAÇÃO BASE DA TABELA */
+                .v3a-table {{ 
+                    border-collapse: collapse; 
+                    color: #000; 
+                    font-size: 11px; 
+                    font-family: 'Segoe UI', sans-serif; 
+                    table-layout: auto !important;
+                }} 
                 
-                .v3a-table td {{ padding: 8px 5px; border-bottom: 1px solid #F0F0F0; white-space: nowrap; text-align: center; }} 
-                .v3a-table td:first-child {{ text-align: left; min-width: 170px; white-space: normal; font-weight: bold; }} 
+                /* CABEÇALHOS CENTRALIZADOS */
+                .v3a-table thead tr th {{ 
+                    background: #1A1A1A; 
+                    color: #FFF; 
+                    padding: 10px 5px; 
+                    text-align: center !important; 
+                    white-space: nowrap; 
+                    position: sticky;
+                    top: 0;
+                    z-index: 10;
+                }} 
                 
+                .v3a-table td {{ padding: 8px 10px; border-bottom: 1px solid #F0F0F0; text-align: center; white-space: nowrap; }} 
+
+                /* FORÇAR COLUNAS A NÃO ENCOLHER */
+                .v3a-table th, .v3a-table td {{ min-width: 75px; }}
+
+                /* PRIMEIRA COLUNA: Células à esquerda */
+                .v3a-table thead th:first-child {{ 
+                    text-align: center !important; 
+                    width: 200px !important; 
+                    min-width: 180px !important;
+                    white-space: normal !important; 
+                }} 
+                
+                .v3a-table td:first-child {{ 
+                    text-align: left !important; 
+                    font-weight: bold; 
+                    white-space: normal !important; 
+                    min-width: 180px !important; 
+                }} 
+
+                /* ELEMENTOS VISUAIS E HIERARQUIA */
                 .row-parent {{ background-color: #FFFFFF !important; font-weight: bold; cursor: pointer; }} 
                 .row-sub {{ background-color: #FFFFFF !important; font-weight: bold; cursor: pointer; display: none; }} 
                 .row-child-dre {{ background-color: #FFFFFF !important; display: none; }} 
                 .arrow {{ display: inline-block; width: 15px; color: #666; font-size: 10px; }}
                 
-                /* Ajuste de identação para mobile: Menos espaço vazio na esquerda */
                 .indent-sub {{ padding-left: 20px !important; }}
                 .indent-child {{ padding-left: 35px !important; font-weight: normal !important; color: #666; }}
 
+                /* LINHAS DE RESULTADO (NUVEM) */
+                .row-result-dre {{ background-color: #f0f0f0 !important; font-weight: bold; }}
+                .row-result-dre td {{ background-color: #f0f0f0 !important; }}
+
+                /* CONTAINER DE SCROLL */
                 .responsive-scroll-dre {{ 
-                    width: 100%; 
+                    width: 100% !important; 
                     overflow-x: auto !important; 
-                    -webkit-overflow-scrolling: touch; 
+                    overflow-y: hidden !important;
+                    display: block !important;
+                    -webkit-overflow-scrolling: touch !important;
+                }}
+
+                /* --- COMPORTAMENTO DESKTOP --- */
+                @media (min-width: 768px) {{
+                    .v3a-table {{
+                        width: 100% !important;
+                        min-width: 100% !important;
+                    }}
+                    .responsive-scroll-dre table {{
+                        display: table !important;
+                    }}
+                }}
+
+                /* --- COMPORTAMENTO MOBILE --- */
+                @media (max-width: 767px) {{
+                    .v3a-table {{ 
+                        width: max-content !important; 
+                        min-width: 950px !important; 
+                    }}
+                    .responsive-scroll-dre table {{
+                        display: block !important;
+                    }}
                 }}
             </style>
             
@@ -667,6 +724,8 @@ if st.session_state.pagina == "DRE":
                         if (!isOpening) {{ 
                             const netos = document.querySelectorAll('.dre-neto-of-p1-' + id); 
                             netos.forEach(n => n.style.display = 'none'); 
+                            const subArrows = document.querySelectorAll('[id^="ad-"][id$="p2"]');
+                            subArrows.forEach(a => a.innerHTML = '▶');
                         }} 
                         arrow.innerHTML = isOpening ? '▼' : '▶'; 
                     }} else if (type === 'p2') {{ 
@@ -703,7 +762,7 @@ if st.session_state.pagina == "DRE":
             cp2 += 1
             html_dre += f'<tr class="row-sub dre-p1-child-{cp1} dre-neto-of-p1-{cp1}" onclick="toggleDRE({cp2}, \'p2\')"><td class="indent-sub"><span id="ad-{cp2}p2" class="arrow">▶</span> {desc}</td>'
         elif is_result:
-            html_dre += f'<tr style="background-color: #f0f0f0 !important; font-weight: bold;"><td>{desc}</td>'
+            html_dre += f'<tr class="row-result-dre"><td>{desc}</td>'
         elif is_pct:
             html_dre += f'<tr style="background-color: #FFFFFF !important; font-style: italic; color: #666;"><td>{desc}</td>'
         else:
@@ -720,7 +779,7 @@ if st.session_state.pagina == "DRE":
             </div> 
         </div> """
 
-    st.components.v1.html(html_dre, height=550, scrolling=True)
+    st.components.v1.html(html_dre, height=550, scrolling=False)
 
 
 #====================# QUADRO 2: MARGEM BRUTA POR ÁREA 2026 (VERSÃO MOBILE OK) #====================#
@@ -874,37 +933,35 @@ if st.session_state.pagina == "DRE":
     except Exception as e:
         st.error(f"Erro ao processar Margem por Área: {e}")
 
-#====================# QUADRO 03: VISÃO EBITDA YOY 2026 x 2025 #====================#
+#====================# QUADRO 03: VISÃO EBITDA YOY 2026 x 2025 (FILTRO ABAIXO) #====================#
     
-    col_eb_t, col_eb_s = st.columns([3.2, 1], gap="small", vertical_alignment="bottom")
+    st.markdown('<div style="padding-top: 10px;"></div>', unsafe_allow_html=True)
+    
+    # 1. Título em linha inteira (Número + Texto)
+    st.markdown("""
+        <div class="header-container">
+            <div class="quadro-num">03.</div>
+            <div class="quadro-titulo">VISÃO EBITDA YOY 2026 x 2025</div>
+        </div>
+    """, unsafe_allow_html=True)
         
-    with col_eb_t: 
-        st.markdown("""
-            <div class="header-container" style="margin-top: 0px; margin-bottom: 10px; padding: 0;">
-                <div class="quadro-num">03.</div>
-                <div class="quadro-titulo">VISÃO EBITDA YOY 2026 x 2025</div>
-            </div>
-        """, unsafe_allow_html=True)
-        
-    with col_eb_s:
-        c1eb, c2eb, c3eb = st.columns([0.6, 1.2, 1.0], vertical_alignment="bottom")
-        with c1eb:
-            st.markdown('<div style="padding-bottom: 8px; text-align: right;"><span class="periodo-label">Período:</span></div>', unsafe_allow_html=True)
-        with c2eb:
-            mes_eb = st.selectbox(
-                "Período", 
-                meses_lista_full, 
-                index=index_fechamento, 
-                key=f"sel_ebitda_dinamico_{index_fechamento}", 
-                label_visibility="collapsed"
-            )
+    # 2. Área de Filtro - Posicionada logo abaixo do título (Sem rótulo "Período")
+    col_sel_eb, col_spacer_eb = st.columns([1.2, 2.8])
+    with col_sel_eb:
+        mes_eb = st.selectbox(
+            "", 
+            meses_lista_full, 
+            index=index_fechamento, 
+            key=f"sel_ebitda_new_pos_{index_fechamento}", 
+            label_visibility="collapsed"
+        )
 
     idx_eb = meses_lista_full.index(mes_eb)
     c_idx, e26, e25 = 7 + idx_eb, data["E26"], data["E25"]
     t_parents = ["+ Receita Bruta", "- Imposto IBS CBS (ISS PIS COFINS)", "= Receita Liquida", "- Custo", "= Lucro Bruto", "% Margem Bruta (sem IR e CSLL)", "% Sobre Receita Liquida (sem IR / CSLL)", "- Despesas", "= Ebitda", "% Sobre a Receita Liquida", "- Imposto IR CSLL", "+ - Outras Receitas E Despesas", "- Investimentos", "= Lucro Liquido", "% S/ Rec Liq"]
 
     html_yoy = f"""
-    <div style="background-color: #FFFFFF; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; padding: 15px; margin-bottom: 0px;">
+    <div style="background-color: #FFFFFF; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; padding: 15px; margin-top: 10px; margin-bottom: 0px;">
         <style>
             /* CONFIGURAÇÃO BASE DA TABELA */
             .y-table {{ 
@@ -915,7 +972,7 @@ if st.session_state.pagina == "DRE":
                 table-layout: auto !important;
             }} 
             
-            /* CENTRALIZAÇÃO DE TODOS OS TÍTULOS (CABEÇALHOS) */
+            /* CENTRALIZAÇÃO DOS CABEÇALHOS */
             .y-table thead tr th {{ 
                 background: #1A1A1A; 
                 color: #FFF; 
@@ -929,7 +986,7 @@ if st.session_state.pagina == "DRE":
             /* CONFIGURAÇÃO DAS COLUNAS */
             .y-table th, .y-table td {{ white-space: nowrap; min-width: 75px; }}
             
-            /* PRIMEIRA COLUNA: Título centralizado e Células à esquerda */
+            /* PRIMEIRA COLUNA (CATEGORIAS) */
             .y-table thead th:first-child {{ 
                 text-align: center !important; 
                 width: 220px !important; 
@@ -954,8 +1011,6 @@ if st.session_state.pagina == "DRE":
             }}
 
             /* --- MEDIA QUERIES PARA RESPONSIVIDADE --- */
-
-            /* COMPORTAMENTO DESKTOP */
             @media (min-width: 768px) {{
                 .y-table {{
                     width: 100% !important;
@@ -966,7 +1021,6 @@ if st.session_state.pagina == "DRE":
                 }}
             }}
 
-            /* COMPORTAMENTO MOBILE */
             @media (max-width: 767px) {{
                 .y-table {{ 
                     width: max-content !important; 
@@ -978,6 +1032,7 @@ if st.session_state.pagina == "DRE":
             }}
 
             .y-yellow {{ background-color: #f0f0f0 !important; font-weight: bold; }} 
+            .y-yellow td {{ background-color: #f0f0f0 !important; }}
             .y-pct-clean {{ font-weight: normal !important; font-style: italic !important; }} 
             .h-grp {{ text-align: center !important; font-weight: bold; border-bottom: 2px solid #FFF !important; font-size: 10px; }}
         </style>
@@ -1099,26 +1154,23 @@ elif st.session_state.pagina == "Orçamento":
         """, unsafe_allow_html=True)
 
 
-#====================# QUADRO 1: ORÇAMENTO YTD - ORÇADO X REALIZADO (RESPONSIVIDADE CORRIGIDA) #====================#
+#====================# QUADRO 1: ORÇAMENTO YTD - ORÇADO X REALIZADO (FILTRO ABAIXO) #====================#
     
     st.markdown('<div style="padding-top: 10px;"></div>', unsafe_allow_html=True) 
-    col_y_t, col_y_s = st.columns([3.2, 1], vertical_alignment="bottom") 
+    
+    # 1. Título em linha inteira para garantir o alinhamento horizontal (Número + Texto)
+    st.markdown('<div class="header-container"><div class="quadro-num">01.</div><div class="quadro-titulo">Orçamento YTD - Orçado x Realizado</div></div>', unsafe_allow_html=True)
 
-    with col_y_t:
-        st.markdown('<div class="header-container" style="margin-top: 0px; padding-top: 0px; margin-bottom: 5px;"><div class="quadro-num">01.</div><div class="quadro-titulo">Orçamento YTD - Orçado x Realizado</div></div>', unsafe_allow_html=True)
-
-    with col_y_s:
-        c_label_orc, c_select_orc, c_spacer = st.columns([0.6, 1.2, 1.0], vertical_alignment="bottom")
-        with c_label_orc:
-            st.markdown('<div style="padding-bottom: 8px; text-align: right;"><span class="periodo-label">Período:</span></div>', unsafe_allow_html=True)
-        with c_select_orc:
-            mes_ytd = st.selectbox(
-                "", 
-                meses_lista_full, 
-                index=index_fechamento, 
-                key=f"sel_ytd_dinamico_{index_fechamento}", 
-                label_visibility="collapsed"
-            )
+    # 2. Área de Filtro posicionada logo abaixo do título
+    col_sel, col_spacer = st.columns([1.2, 2.8]) # Largura ajustada para não ficar esticado no Desktop
+    with col_sel:
+        mes_ytd = st.selectbox(
+            "", 
+            meses_lista_full, 
+            index=index_fechamento, 
+            key=f"sel_ytd_new_pos_{index_fechamento}", 
+            label_visibility="collapsed"
+        )
             
     idx_y = meses_lista_full.index(mes_ytd)
     df_raw_orc_data, r_idx_ytd_orc = data["ORC_RAW"], 6 + idx_y
@@ -1126,7 +1178,7 @@ elif st.session_state.pagina == "Orçamento":
     p_orc_l_names = ["genteegestao", "financeiro", "diretoria", "comunicacao", "comercial", "operacoes", "ventures", "ondemand"]
 
     html_bytd = f"""
-    <div style="background-color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; margin-bottom: 40px;">
+    <div style="background-color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; margin-top: 10px; margin-bottom: 40px;">
         <style>
             /* CONFIGURAÇÃO BASE DA TABELA */
             .b-table {{ 
@@ -1134,7 +1186,7 @@ elif st.session_state.pagina == "Orçamento":
                 color: #000; 
                 font-size: 11px; 
                 font-family: 'Segoe UI', sans-serif; 
-                table-layout: auto !important; /* REMOVIDO FIXED */
+                table-layout: auto !important;
             }} 
             
             /* CENTRALIZAÇÃO DOS TÍTULOS */
@@ -1501,7 +1553,7 @@ elif st.session_state.pagina == "Receitas":
 
         # --- RENDERIZAÇÃO NO FORMATO KPI-CARD DO ORÇAMENTO ---
         st.markdown(f"""
-            <div class="kpi-container" style="margin-bottom: 20px; margin-top: 20px;">
+            <div class="kpi-container" style="margin-bottom: 10px;">
                 <div class="kpi-card" style="border-left-color: #B8860B;">
                     <div class="kpi-label">RECEITA ON DEMAND</div>
                     <div class="kpi-value">R$ {fmt(rec_ondemand)}</div>
@@ -1530,20 +1582,21 @@ elif st.session_state.pagina == "Receitas":
 
 
 
-    #====================# 02. TOP 10 CLIENTES #====================#
-    col_t10_tit, col_t10_box = st.columns([5.5, 2.5], gap="small", vertical_alignment="bottom")
+    #====================# 02. TOP 10 CLIENTES (VERSÃO FINAL RESPONSIVA) #====================#
+    
+    st.markdown('<div style="padding-top: 10px;"></div>', unsafe_allow_html=True)
 
-    with col_t10_tit:
-        st.markdown('<div class="header-container" style="margin-top: 40px; margin-bottom: 10px;"><div class="quadro-num">04.</div><div class="quadro-titulo">Top 10 Clientes</div></div>', unsafe_allow_html=True)
+    # 1. Título em linha inteira (Número + Texto)
+    st.markdown('<div class="header-container"><div class="quadro-num">04.</div><div class="quadro-titulo">Top 10 Clientes</div></div>', unsafe_allow_html=True)
 
-    with col_t10_box:
-        st.markdown('<div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">', unsafe_allow_html=True)
+    # 2. Área de Filtro - Posicionada logo abaixo do título
+    col_sel_t10, col_spacer_t10 = st.columns([1.8, 2.2])
+    with col_sel_t10:
         filtro_top10 = st.segmented_control(
             "Segmento:", ["Todos", "On Demand", "Ventures"], 
             selection_mode="single", default="Todos", 
             label_visibility="collapsed", key="radio_top10_vendas"
         )
-        st.markdown('</div>', unsafe_allow_html=True)
 
     try:
         df_top10_raw = pd.read_excel("dados_dre.xlsx", sheet_name="Margem por Faixa", skiprows=18)
@@ -1609,19 +1662,78 @@ elif st.session_state.pagina == "Receitas":
             df_final_t10['margem_calc'] = df_final_t10.apply(lambda r_t: safe_div(r_t['lucro_recalc'], r_t[c_receita_t10]), axis=1)
 
             html_top10 = f"""
-            <div style="background-color: #FFFFFF; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; padding: 20px; margin-bottom: 0px;">
+            <div style="background-color: #FFFFFF; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; padding: 15px; margin-top: 10px; margin-bottom: 0px;">
                 <style>
-                    .top-table {{ width: 100%; border-collapse: collapse; color: #000; font-size: 11px; font-family: 'Segoe UI', sans-serif; }}
-                    .top-table thead th {{ background: #1A1A1A; color: #FFF; padding: 10px; text-align: center; white-space: nowrap; }}
-                    .top-table th:nth-child(2) {{ text-align: left; }}
-                    .top-table td {{ padding: 8px; border-bottom: 1px solid #F0F0F0; text-align: center; white-space: nowrap; }}
-                    .top-table td:nth-child(2) {{ text-align: left; font-weight: bold; white-space: normal; min-width: 150px; }}
+                    /* CONFIGURAÇÃO BASE DA TABELA */
+                    .top-table {{ 
+                        border-collapse: collapse; 
+                        color: #000; 
+                        font-size: 11px; 
+                        font-family: 'Segoe UI', sans-serif; 
+                        table-layout: auto !important;
+                    }} 
+                    
+                    /* CABEÇALHOS CENTRALIZADOS */
+                    .top-table thead th {{ 
+                        background: #1A1A1A; 
+                        color: #FFF; 
+                        padding: 10px 5px; 
+                        text-align: center !important; 
+                        white-space: nowrap; 
+                    }} 
+                    
+                    .top-table td {{ padding: 8px 10px; border-bottom: 1px solid #F0F0F0; text-align: center; white-space: nowrap; }} 
+
+                    /* FORÇAR COLUNAS A NÃO ENCOLHER */
+                    .top-table th, .top-table td {{ min-width: 75px; }}
+
+                    /* PRIMEIRA E SEGUNDA COLUNA */
+                    .top-table td:first-child {{ font-weight: normal; min-width: 30px; }}
+                    .top-table thead th:nth-child(2) {{ text-align: center !important; }}
+                    .top-table td:nth-child(2) {{ 
+                        text-align: left !important; 
+                        font-weight: bold; 
+                        white-space: normal !important; 
+                        min-width: 160px !important; 
+                    }} 
+
                     .row-total-top {{ background-color: #f0f0f0 !important; font-weight: bold; }}
+                    .row-total-top td {{ background-color: #f0f0f0 !important; }}
                     .row-outros {{ font-style: italic; color: #666; }}
-                    .responsive-scroll {{ width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }}
+
+                    /* CONTAINER DE SCROLL */
+                    .responsive-scroll-top {{ 
+                        width: 100% !important; 
+                        overflow-x: auto !important; 
+                        overflow-y: hidden !important;
+                        display: block !important;
+                        -webkit-overflow-scrolling: touch !important;
+                    }}
+
+                    /* COMPORTAMENTO DESKTOP */
+                    @media (min-width: 768px) {{
+                        .top-table {{
+                            width: 100% !important;
+                            min-width: 100% !important;
+                        }}
+                        .responsive-scroll-top table {{
+                            display: table !important;
+                        }}
+                    }}
+
+                    /* COMPORTAMENTO MOBILE */
+                    @media (max-width: 767px) {{
+                        .top-table {{ 
+                            width: max-content !important; 
+                            min-width: 900px !important; 
+                        }}
+                        .responsive-scroll-top table {{
+                            display: block !important;
+                        }}
+                    }}
                 </style>
                 
-                <div class="responsive-scroll">
+                <div class="responsive-scroll-top">
                     <table class="top-table">
                         <thead><tr>
                             <th>#</th><th>Cliente</th><th>Projetos</th><th>Receita Bruta</th><th>% Part s/ Rec Total</th><th>Imposto</th><th>Custo</th><th>Lucro Bruto</th><th>Margem</th>
@@ -1658,7 +1770,7 @@ elif st.session_state.pagina == "Receitas":
                 </div>
             </div>"""
 
-            st.components.v1.html(html_top10, height=510, scrolling=False)
+            st.components.v1.html(html_top10, height=530, scrolling=False)
 
     except Exception as e:
         st.error(f"Erro ao carregar Top 10 Clientes: {e}")
