@@ -431,7 +431,7 @@ try:
         if st.button("Orçamento", use_container_width=True, key="btn_orc"):
             mudar_pagina("Orçamento")
     with col_nav3:
-        if st.button("Receitas", use_container_width=True, key="btn_vend"):
+        if st.button("Outros", use_container_width=True, key="btn_vend"):
             mudar_pagina("Receitas")
 
     # Linha de destaque para simular a navegação do print
@@ -1264,7 +1264,7 @@ elif st.session_state.pagina == "Orçamento":
                 .row-child-o-orc {{ background-color: #FFFFFF !important; display: none; }} 
                 
                 .arrow-o-orc {{ display: inline-block; width: 15px; color: #666; font-size: 10px; }}
-                .indent-orc-p2 {{ padding-left: 20px !important; font-weight: normal !important; }}
+                .indent-orc-p2 {{ padding-left: 20px !important; font-weight: bold !important; }}
                 .indent-orc-neta {{ padding-left: 35px !important; font-weight: normal !important; font-style: italic; color: #666; font-size: 10px; }}
                 .has-tooltip {{ border-bottom: 1px dotted #B8860B; cursor: help; display: inline-block; }}
 
@@ -1301,18 +1301,31 @@ elif st.session_state.pagina == "Orçamento":
         
     # 4. Loop de Construção das Linhas da Tabela
     cp1o_orc, cp2o_orc = 0, 0
+    ocultar_por_honorarios = False 
+
     for _, row_o_vals in df_o_a_orc.iterrows():
         dr_orc = str(row_o_vals.iloc[0]).strip()
         dn_orc = normalize_id(dr_orc)
         
-        # Lógica de Hierarquia (Pai, Filho, Neto)
+        # Se encontrarmos um novo PAI, resetamos a trava de ocultar
         if dn_orc in p_orc_l_names:
+            ocultar_por_honorarios = False
             cp1o_orc += 1
             html_orc_final += f'<tr class="row-p1-orc" onclick="toggleOrc({cp1o_orc}, \'p1\')"><td><span id="ao-{cp1o_orc}p1" class="arrow-o-orc">▶</span> {dr_orc}</td>'
+        
+        # Se a trava estiver ativa (depois da Equipe Total), pulamos as linhas de pessoas
+        elif ocultar_por_honorarios:
+            continue
+            
         elif any(x_match in dn_orc for x_match in ["despesas", "honorario", "prospeccoes", "concorrencia"]):
             cp2o_orc += 1
             html_orc_final += f'<tr class="row-p2-orc p1-child-of-{cp1o_orc} neto-of-p1-{cp1o_orc}" onclick="toggleOrc({cp2o_orc}, \'p2\')"><td class="indent-orc-p2"><span id="ao-{cp2o_orc}p2" class="arrow-o-orc">▶</span> {dr_orc}</td>'
+        
         else:
+            # Se a linha atual for Equipe Total, renderizamos e ativamos a trava para a próxima linha
+            if "equipe total" in dr_orc.lower():
+                ocultar_por_honorarios = True
+            
             html_orc_final += f'<tr class="row-child-o-orc p2-child-of-{cp2o_orc} neto-of-p1-{cp1o_orc}"><td class="indent-orc-neta">{dr_orc}</td>'
         
         # Preenchimento das Células de Valores
