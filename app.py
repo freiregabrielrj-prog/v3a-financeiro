@@ -6,11 +6,11 @@ import plotly.graph_objects as go
 import openpyxl
 import base64
 
-# 1. CONFIGURAÇÃO DE PÁGINA (Unificada)
+# 1. CONFIGURAÇÃO DE PÁGINA (WIDE para o relatório)
 st.set_page_config(
     page_title="V3A Financeiro", 
     page_icon="logo_v3a_icone.png", 
-    layout="wide", # Layout wide para o relatório ser amplo
+    layout="wide", 
     initial_sidebar_state="collapsed"
 )
 
@@ -26,65 +26,68 @@ def tentar_login():
     else:
         st.session_state["erro_login"] = True
 
-# Container vazio para isolar o CSS e os elementos de Login
-login_placeholder = st.empty()
-
+# --- BLOCO DE LOGIN (CENTRALIZADO) ---
 if not st.session_state.autenticado:
-    with login_placeholder.container():
-        # CSS EXCLUSIVO PARA A TELA DE LOGIN (ISOLADO)
-        st.markdown("""
-            <style>
-            /* Alvos específicos para centralizar APENAS quando o login está ativo */
-            .main .block-container {
-                display: flex !important;
-                flex-direction: column !important;
-                justify-content: center !important;
-                align-items: center !important;
-                height: 100vh !important;
-                padding: 0 !important;
-            }
-            
-            /* Ajuste para evitar quebra de texto no título */
-            h1 { white-space: nowrap !important; text-align: center !important; font-size: 2.2rem !important; }
-            
-            /* Sincronia de largura */
-            .stTextInput, .stButton, [data-testid="stVerticalBlock"] {
-                width: 100% !important;
-                max-width: 400px !important;
-            }
+    # CSS INJETADO APENAS NA TELA DE LOGIN
+    st.markdown("""
+        <style>
+        /* Centraliza apenas o conteúdo desta fase */
+        .main .block-container {
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: center !important;
+            height: 100vh !important;
+            min-height: 100vh !important;
+            padding: 0 !important;
+        }
 
-            .stTextInput input { text-align: center !important; }
+        /* Evita quebra de texto no título */
+        h1 { 
+            white-space: nowrap !important; 
+            text-align: center !important; 
+            font-size: 2.2rem !important; 
+            margin-bottom: 0.5rem !important;
+        }
 
-            /* Limpeza de rodapé e badges */
-            footer { display: none !important; }
-            [data-testid="stStatusWidget"], .stDeployButton, header, #MainMenu {
-                display: none !important;
-            }
-            </style>
-        """, unsafe_allow_html=True)
+        /* Sincroniza largura de input e botão */
+        .stTextInput, .stButton, [data-testid="stVerticalBlock"] {
+            width: 100% !important;
+            max-width: 380px !important;
+        }
 
-        st.markdown("<h1>🔒 Acesso Restrito</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: gray;'>Digite a senha para acessar o relatório:</p>", unsafe_allow_html=True)
-        
-        st.text_input(
-            "Senha", 
-            type="password", 
-            key="senha_input", 
-            on_change=tentar_login,
-            label_visibility="collapsed"
-        )
-        
-        if st.button("Entrar"):
-            tentar_login()
-            if st.session_state["autenticado"]:
-                st.rerun()
+        .stTextInput input { text-align: center !important; height: 45px !important; }
+        .stButton button { width: 100% !important; height: 45px !important; }
 
-        if st.session_state.get("erro_login"):
-            st.error("Senha incorreta!")
-            st.session_state["erro_login"] = False 
+        /* Esconde elementos nativos */
+        footer { display: none !important; }
+        [data-testid="stStatusWidget"], .stDeployButton, header, #MainMenu {
+            display: none !important;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown("<h1>🔒 Acesso Restrito</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='color: gray; margin-bottom: 15px;'>Digite a senha para acessar o relatório:</p>", unsafe_allow_html=True)
     
-    # Interrompe o script aqui para não carregar o relatório por baixo
-    st.stop()
+    st.text_input(
+        "Senha", 
+        type="password", 
+        key="senha_input", 
+        on_change=tentar_login,
+        label_visibility="collapsed"
+    )
+    
+    if st.button("Entrar"):
+        tentar_login()
+        if st.session_state["autenticado"]:
+            st.rerun()
+
+    if st.session_state.get("erro_login"):
+        st.error("Senha incorreta!")
+        st.session_state["erro_login"] = False 
+    
+    st.stop() # Mata a execução aqui para o CSS não vazar para o relatório
 
 # =================================================================
 # FIM DO PAINEL DE LOGIN
