@@ -6,27 +6,18 @@ import plotly.graph_objects as go
 import openpyxl
 import base64
 
-# 1. CONFIGURAÇÃO DE PÁGINA (Deve ser o primeiro comando Streamlit)
-st.set_page_config(page_title="V3A Financeiro", layout="wide", initial_sidebar_state="collapsed")
-
+# 1. CONFIGURAÇÃO DE PÁGINA (UNIFICADA - DEVE SER A PRIMEIRA LINHA DE STREAMLIT)
 st.set_page_config(
     page_title="V3A Financeiro", 
-    page_icon="logo_v3a_icone.png", # Use um arquivo .png ou .ico quadrado
-    layout="centered"
+    page_icon="logo_v3a_icone.png", 
+    layout="centered",
+    initial_sidebar_state="collapsed"
 )
 
-# =================================================================
-# PAINEL DE LOGIN
-# =================================================================
-
-import streamlit as st
-
-st.set_page_config(page_title="V3A Financeiro", layout="centered")
-
-# CSS para centralização estática em Desktop e Mobile
+# 2. CSS PARA CENTRALIZAÇÃO E REMOÇÃO DE MARCAS D'ÁGUA
 st.markdown("""
     <style>
-    /* Centraliza o conteúdo vertical e horizontalmente */
+    /* Centralização total para Desktop e Mobile */
     .main .block-container {
         display: flex !important;
         flex-direction: column !important;
@@ -36,33 +27,38 @@ st.markdown("""
         min-height: 100vh !important;
         padding-top: 0 !important;
     }
-    /* Remove o cabeçalho nativo para não empurrar o conteúdo para baixo */
-    [data-testid="stHeader"] { display: none; }
+
+    /* REMOVE A MARCA D'ÁGUA 'MADE WITH STREAMLIT' E O ÍCONE DE BAIXO */
+    footer { visibility: hidden; }
     
-    /* Garante que os inputs não fiquem excessivamente largos no desktop */
-    .stTextInput, .stButton { width: 100% !important; max-width: 350px !important; }
+    /* REMOVE O MENU (HAMBÚRGUER) E A BARRA DE TOPO */
+    [data-testid="stHeader"], #MainMenu { visibility: hidden; }
+
+    /* Ajuste de largura dos campos de login */
+    .stTextInput, .stButton { 
+        width: 100% !important; 
+        max-width: 350px !important; 
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# Inicializa estado de autenticação
+# 3. SISTEMA DE AUTENTICAÇÃO
 if 'autenticado' not in st.session_state:
     st.session_state.autenticado = False
 
-# 1. Configuração da senha
 SENHA_CORRETA = "cashflow"
 
 def tentar_login():
-    """Função chamada tanto pelo botão quanto pelo Enter (on_change)"""
     if st.session_state.senha_input == SENHA_CORRETA:
         st.session_state["autenticado"] = True
     else:
-        st.session_state["erro"] = True
+        st.session_state["erro_login"] = True
 
 def verificar_senha():
     if not st.session_state["autenticado"]:
         st.title("🔒 Acesso Restrito")
         
-        # O parâmetro on_change permite que o Enter funcione automaticamente
+        # O Enter funciona automaticamente através do on_change
         st.text_input(
             "Digite a senha para acessar o relatório:", 
             type="password", 
@@ -75,18 +71,22 @@ def verificar_senha():
             if st.session_state["autenticado"]:
                 st.rerun()
 
-        if st.session_state.get("erro"):
+        if st.session_state.get("erro_login"):
             st.error("Senha incorreta!")
-            st.session_state["erro"] = False # Reseta o erro para a próxima tentativa
+            st.session_state["erro_login"] = False 
         
         return False
     return True
 
-# 2. Execução
+# 4. EXECUÇÃO DO APLICATIVO
 if verificar_senha():
-    # --- TODO O SEU RELATÓRIO VEM AQUI ---
-    st.success("Acesso liberado!")
+    # --- TODO O SEU RELATÓRIO VEM AQUI ABAIXO ---
     
+    st.success("Acesso liberado!")
+    # Exemplo de conteúdo:
+    # df = pd.read_excel("seu_arquivo.xlsx")
+    # st.write(df)
+
 else:
     st.stop()
 
