@@ -14,10 +14,10 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. CSS REFORÇADO PARA LIMPEZA TOTAL (DESKTOP E MOBILE)
+# 2. CSS PARA ALINHAMENTO CIRÚRGICO (SEM QUEBRA DE TEXTO)
 st.markdown("""
     <style>
-    /* Centralização total */
+    /* Centralização total da página */
     .main .block-container {
         display: flex !important;
         flex-direction: column !important;
@@ -25,23 +25,46 @@ st.markdown("""
         align-items: center !important;
         height: 100vh !important;
         min-height: 100vh !important;
-        padding-top: 0 !important;
+        padding: 0 !important;
     }
 
-    /* REMOVE O ÍCONE DA SETA (STATUS/DEPLOY/PERFIL) E RODAPÉ */
-    footer { display: none !important; visibility: hidden !important; }
-    [data-testid="stStatusWidget"] { display: none !important; }
-    .stDeployButton { display: none !important; }
-    header { visibility: hidden !important; }
-    #MainMenu { visibility: hidden !important; }
-    
-    /* Remove o botão flutuante de ações do Streamlit */
-    div.stActionButton { display: none !important; }
+    /* Força o alinhamento central e evita quebra de linha no título */
+    [data-testid="stVerticalBlock"] {
+        align-items: center !important;
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+    }
 
-    /* Ajuste de largura dos campos */
-    .stTextInput, .stButton { 
-        width: 100% !important; 
-        max-width: 350px !important; 
+    /* Ajuste do Título para não quebrar */
+    h1 {
+        white-space: nowrap !important;
+        text-align: center !important;
+        width: 100% !important;
+        font-size: 2.2rem !important; /* Ajuste leve para caber em telas menores */
+    }
+
+    /* Largura fixa e sincronizada para Input e Botão */
+    .stTextInput, .stButton, [data-testid="stVerticalBlock"] > div {
+        width: 100% !important;
+        max-width: 400px !important; /* Aumentado levemente para acomodar o texto superior */
+    }
+
+    .stTextInput input {
+        text-align: center !important;
+        height: 45px !important;
+    }
+
+    .stButton > button {
+        width: 100% !important;
+        height: 45px !important;
+        margin-top: 5px !important;
+    }
+
+    /* Limpeza total de rodapé e badges */
+    footer { display: none !important; }
+    [data-testid="stStatusWidget"], .stDeployButton, header, #MainMenu {
+        display: none !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -60,15 +83,20 @@ def tentar_login():
 
 def verificar_senha():
     if not st.session_state["autenticado"]:
-        st.markdown("<h1 style='text-align: center;'>🔒 Acesso Restrito</h1>", unsafe_allow_html=True)
+        # Título com ícone em linha única
+        st.markdown("<h1>🔒 Acesso Restrito</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: gray; margin-bottom: 10px;'>Digite a senha para acessar o relatório:</p>", unsafe_allow_html=True)
         
+        # Input de senha
         st.text_input(
-            "Digite a senha para acessar o relatório:", 
+            "Senha", 
             type="password", 
             key="senha_input", 
-            on_change=tentar_login
+            on_change=tentar_login,
+            label_visibility="collapsed"
         )
         
+        # Botão entrar
         if st.button("Entrar"):
             tentar_login()
             if st.session_state["autenticado"]:
@@ -83,8 +111,8 @@ def verificar_senha():
 
 # 4. EXECUÇÃO
 if verificar_senha():
+    # Seu relatório começa aqui
     st.success("Acesso liberado!")
-    # Seu relatório começa aqui...
 else:
     st.stop()
 
