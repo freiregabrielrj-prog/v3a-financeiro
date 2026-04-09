@@ -11,151 +11,84 @@ st.set_page_config(page_title="V3A Financeiro", layout="wide", initial_sidebar_s
 
 
 # =================================================================
-# 2. SISTEMA DE ACESSO (LOGIN) - CENTRALIZAÇÃO AUTOMÁTICA UNIVERSAL
+# PAINEL DE LOGIN
 # =================================================================
 
+import streamlit as st
+
+st.set_page_config(page_title="V3A Financeiro", layout="centered")
+
+# CSS para centralização estática em Desktop e Mobile
+st.markdown("""
+    <style>
+    /* Centraliza o conteúdo vertical e horizontalmente */
+    .main .block-container {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: center !important;
+        height: 100vh !important;
+        min-height: 100vh !important;
+        padding-top: 0 !important;
+    }
+    /* Remove o cabeçalho nativo para não empurrar o conteúdo para baixo */
+    [data-testid="stHeader"] { display: none; }
+    
+    /* Garante que os inputs não fiquem excessivamente largos no desktop */
+    .stTextInput, .stButton { width: 100% !important; max-width: 350px !important; }
+    </style>
+""", unsafe_allow_html=True)
+
+# Inicializa estado de autenticação
 if 'autenticado' not in st.session_state:
     st.session_state.autenticado = False
 
-def validar_senha():
-    if st.session_state.senha_input == "cashflow":
-        st.session_state.autenticado = True
+# 1. Configuração da senha
+SENHA_CORRETA = "cashflow"
+
+def tentar_login():
+    """Função chamada tanto pelo botão quanto pelo Enter (on_change)"""
+    if st.session_state.senha_input == SENHA_CORRETA:
+        st.session_state["autenticado"] = True
     else:
-        st.session_state.erro_login = True
+        st.session_state["erro"] = True
 
-if not st.session_state.autenticado:
+def verificar_senha():
+    if not st.session_state["autenticado"]:
+        st.title("🔒 Acesso Restrito")
+        
+        # O parâmetro on_change permite que o Enter funcione automaticamente
+        st.text_input(
+            "Digite a senha para acessar o relatório:", 
+            type="password", 
+            key="senha_input", 
+            on_change=tentar_login
+        )
+        
+        if st.button("Entrar"):
+            tentar_login()
+            if st.session_state["autenticado"]:
+                st.rerun()
 
-    st.markdown("""
-        <style>
-        /* 1. FUNDO E RESET DE MARGENS NATIVAS */
-        .stApp {
-            background-color: #F0F2F5;
-        }
+        if st.session_state.get("erro"):
+            st.error("Senha incorreta!")
+            st.session_state["erro"] = False # Reseta o erro para a próxima tentativa
+        
+        return False
+    return True
 
-        /* 2. O PULO DO GATO: CENTRALIZAÇÃO AUTOMÁTICA (DESKTOP E MOBILE) */
-        /* Isso ignora as colunas e força o conteúdo ao centro exato da tela */
-        .main .block-container {
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: center !important;
-            align-items: center !important;
-            height: 100vh !important;
-            min-height: 100vh !important;
-            padding: 0 !important;
-        }
-
-        /* 3. LARGURA DOS ELEMENTOS (PARA NÃO FICAREM GIGANTES NO DESKTOP) */
-        .stTextInput, .stButton, [data-testid="stVerticalBlock"] {
-            width: 100% !important;
-            max-width: 350px !important; /* Largura ideal para Mobile e Desktop */
-            margin: 0 auto !important;
-        }
-
-        /* 4. ESTILO DOS CAMPOS */
-        .stTextInput input {
-            text-align: center !important;
-            height: 50px !important;
-            border-radius: 8px !important;
-        }
-
-        div.stButton > button {
-            width: 100% !important;
-            height: 50px !important;
-            background-color: #FFCB05 !important;
-            color: #1A1A1A !important;
-            font-weight: bold !important;
-            text-transform: uppercase !important;
-            border-radius: 8px !important;
-            border: none !important;
-            margin-top: 15px !important;
-        }
-
-        /* 5. REMOVER HEADER E TOOLBAR */
-        [data-testid="stHeader"], [data-testid="stToolbar"], label {
-            display: none !important;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-
-    # Note que agora não precisamos mais de st.columns complexas
-    # O CSS acima já cuida de tudo.
+# 2. Execução
+if verificar_senha():
+    # --- TODO O SEU RELATÓRIO VEM AQUI ---
+    st.success("Acesso liberado!")
     
-    st.markdown("<h2 style='text-align: center; color: #1A1A1A; margin-bottom: 5px;'>Acesso Restrito</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #666; margin-bottom: 25px;'>Financeiro - Painel Executivo</p>", unsafe_allow_html=True)
-
-    st.text_input(
-        "",
-        type="password",
-        key="senha_input",
-        placeholder="Digite sua senha",
-        on_change=validar_senha
-    )
-
-    if st.button("Entrar no Relatório"):
-        validar_senha()
-        if st.session_state.autenticado:
-            st.rerun()
-
-    if st.session_state.get("erro_login"):
-        st.error("Senha incorreta.")
-
+else:
     st.stop()
 
-    
-    # Estrutura Visual
-    # Usamos o markdown para envolver os componentes do Streamlit no nosso Card CSS
-    st.markdown('<div class="login-card">', unsafe_allow_html=True)
-    
-    # Renderização da Logo
-    try:
-        with open("image_3.png", "rb") as f:
-            logo_b64 = base64.b64encode(f.read()).decode()
-            st.markdown(f'<img src="data:image/png;base64,{logo_b64}" style="width: 130px; margin-bottom: 20px; filter: drop-shadow(0 0 10px rgba(0,0,0,0.2));">', unsafe_allow_html=True)
-    except:
-        pass
-
-    st.markdown("<h2 style='margin: 0; font-weight: 700; letter-spacing: -0.5px;'>Painel Executivo</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='opacity: 0.7; font-size: 14px; margin-bottom: 2rem;'>Financeiro V3A</p>", unsafe_allow_html=True)
-    
-    # Campo de Senha
-    st.text_input("SENHA DE ACESSO", type="password", key="senha_digitada", on_change=validar_senha, placeholder="••••••••")
-    
-    # Botão de Login
-    st.button("Entrar no Sistema", on_click=validar_senha)
-    
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    st.stop()
-    
-
-    # Criamos a estrutura do card usando uma única div central
-    # Isso evita que o Streamlit tente dividir em colunas 0.5, 1, 0.5
-    st.markdown('<div class="main-login-container">', unsafe_allow_html=True)
-    st.markdown('<div class="login-card">', unsafe_allow_html=True)
-    
-    # Logo
-    try:
-        with open("image_3.png", "rb") as f:
-            logo_b64 = base64.b64encode(f.read()).decode()
-            st.markdown(f'<img src="data:image/png;base64,{logo_b64}" style="width: 140px; margin-bottom: 20px;">', unsafe_allow_html=True)
-    except:
-        pass
-
-    st.markdown("<h2 style='margin: 0; font-family: Segoe UI;'>Acesso Restrito</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='opacity: 0.8; margin-bottom: 30px;'>Painel Executivo Financeiro</p>", unsafe_allow_html=True)
-    
-    # O Streamlit renderiza os widgets dentro da div acima
-    st.text_input("SENHA DE ACESSO", type="password", key="senha_digitada", on_change=validar_senha, placeholder="Digite a senha...")
-    st.button("DESBLOQUEAR", on_click=validar_senha)
-    
-    st.markdown('</div></div>', unsafe_allow_html=True)
-    
-    st.stop()
-    
-    
 # =================================================================
-# 3. RESTANTE DO CÓDIGO (Só executa se a senha estiver correta)
+# FIM DO PAINEL DE LOGIN
 # =================================================================
+
 
 def normalize_id(text):
     if not isinstance(text, str): return ""
