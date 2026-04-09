@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 import openpyxl
 import base64
 
-# 1. CONFIGURAÇÃO DE PÁGINA (UNIFICADA - DEVE SER A PRIMEIRA LINHA DE STREAMLIT)
+# 1. CONFIGURAÇÃO DE PÁGINA (UNIFICADA)
 st.set_page_config(
     page_title="V3A Financeiro", 
     page_icon="logo_v3a_icone.png", 
@@ -14,10 +14,10 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. CSS PARA CENTRALIZAÇÃO E REMOÇÃO DE MARCAS D'ÁGUA
+# 2. CSS REFORÇADO PARA CENTRALIZAÇÃO E LIMPEZA TOTAL (DESKTOP E MOBILE)
 st.markdown("""
     <style>
-    /* Centralização total para Desktop e Mobile */
+    /* Centralização total do painel de login */
     .main .block-container {
         display: flex !important;
         flex-direction: column !important;
@@ -28,11 +28,17 @@ st.markdown("""
         padding-top: 0 !important;
     }
 
-    /* REMOVE A MARCA D'ÁGUA 'MADE WITH STREAMLIT' E O ÍCONE DE BAIXO */
-    footer { visibility: hidden; }
+    /* REMOVE O RODAPÉ 'CREATED BY' / 'MADE WITH' (VERSÃO RADICAL PARA MOBILE) */
+    footer {visibility: hidden !important;}
+    #MainMenu {visibility: hidden !important;}
+    header {visibility: hidden !important;}
     
-    /* REMOVE O MENU (HAMBÚRGUER) E A BARRA DE TOPO */
-    [data-testid="stHeader"], #MainMenu { visibility: hidden; }
+    /* Esconde a barra de ancoragem que aparece no mobile */
+    .stCustomFooter {display: none !important;}
+    [data-testid="stStatusWidget"] {display: none !important;}
+    
+    /* Remove espaços extras no rodapé */
+    div.block-container {padding-bottom: 0rem !important;}
 
     /* Ajuste de largura dos campos de login */
     .stTextInput, .stButton { 
@@ -56,7 +62,7 @@ def tentar_login():
 
 def verificar_senha():
     if not st.session_state["autenticado"]:
-        st.title("🔒 Acesso Restrito")
+        st.markdown("<h1 style='text-align: center;'>🔒 Acesso Restrito</h1>", unsafe_allow_html=True)
         
         # O Enter funciona automaticamente através do on_change
         st.text_input(
@@ -83,9 +89,7 @@ if verificar_senha():
     # --- TODO O SEU RELATÓRIO VEM AQUI ABAIXO ---
     
     st.success("Acesso liberado!")
-    # Exemplo de conteúdo:
-    # df = pd.read_excel("seu_arquivo.xlsx")
-    # st.write(df)
+    st.write("Relatórios V3A carregados com sucesso.")
 
 else:
     st.stop()
