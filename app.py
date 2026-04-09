@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 import openpyxl
 import base64
 
-# 1. CONFIGURAÇÃO DE PÁGINA (UNIFICADA)
+# 1. CONFIGURAÇÃO DE PÁGINA
 st.set_page_config(
     page_title="V3A Financeiro", 
     page_icon="logo_v3a_icone.png", 
@@ -14,10 +14,10 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. CSS REFORÇADO PARA CENTRALIZAÇÃO E LIMPEZA TOTAL (DESKTOP E MOBILE)
+# 2. CSS REFORÇADO PARA LIMPEZA TOTAL (DESKTOP E MOBILE)
 st.markdown("""
     <style>
-    /* Centralização total do painel de login */
+    /* Centralização total */
     .main .block-container {
         display: flex !important;
         flex-direction: column !important;
@@ -28,19 +28,17 @@ st.markdown("""
         padding-top: 0 !important;
     }
 
-    /* REMOVE O RODAPÉ 'CREATED BY' / 'MADE WITH' (VERSÃO RADICAL PARA MOBILE) */
-    footer {visibility: hidden !important;}
-    #MainMenu {visibility: hidden !important;}
-    header {visibility: hidden !important;}
+    /* REMOVE O ÍCONE DA SETA (STATUS/DEPLOY/PERFIL) E RODAPÉ */
+    footer { display: none !important; visibility: hidden !important; }
+    [data-testid="stStatusWidget"] { display: none !important; }
+    .stDeployButton { display: none !important; }
+    header { visibility: hidden !important; }
+    #MainMenu { visibility: hidden !important; }
     
-    /* Esconde a barra de ancoragem que aparece no mobile */
-    .stCustomFooter {display: none !important;}
-    [data-testid="stStatusWidget"] {display: none !important;}
-    
-    /* Remove espaços extras no rodapé */
-    div.block-container {padding-bottom: 0rem !important;}
+    /* Remove o botão flutuante de ações do Streamlit */
+    div.stActionButton { display: none !important; }
 
-    /* Ajuste de largura dos campos de login */
+    /* Ajuste de largura dos campos */
     .stTextInput, .stButton { 
         width: 100% !important; 
         max-width: 350px !important; 
@@ -64,7 +62,6 @@ def verificar_senha():
     if not st.session_state["autenticado"]:
         st.markdown("<h1 style='text-align: center;'>🔒 Acesso Restrito</h1>", unsafe_allow_html=True)
         
-        # O Enter funciona automaticamente através do on_change
         st.text_input(
             "Digite a senha para acessar o relatório:", 
             type="password", 
@@ -84,13 +81,10 @@ def verificar_senha():
         return False
     return True
 
-# 4. EXECUÇÃO DO APLICATIVO
+# 4. EXECUÇÃO
 if verificar_senha():
-    # --- TODO O SEU RELATÓRIO VEM AQUI ABAIXO ---
-    
     st.success("Acesso liberado!")
-    st.write("Relatórios V3A carregados com sucesso.")
-
+    # Seu relatório começa aqui...
 else:
     st.stop()
 
