@@ -1204,75 +1204,34 @@ elif st.session_state.pagina == "Orçamento":
     
     st.markdown('<div class="header-container" style="margin-top: 20px;"><div class="quadro-num">02.</div><div class="quadro-titulo">Orçamento Anual</div></div>', unsafe_allow_html=True)
 
-    # 1. Carga e Limpeza de dados (Remoção de None/NaN)
+    # 1. Carga e Limpeza de dados
     df_o_a_orc = data["ORC_ANUAL"].copy()
+    df_o_a_orc = df_o_a_orc[df_o_a_orc.iloc[:, 0].notna()]
+    df_o_a_orc = df_o_a_orc[df_o_a_orc.iloc[:, 0].astype(str).str.lower() != "none"]
+    df_o_a_orc = df_o_a_orc[df_o_a_orc.iloc[:, 0].astype(str).str.strip() != ""]
 
-    # Filtros para remover linhas sujas do Excel
-    df_o_a_orc = df_o_a_orc[df_o_a_orc.iloc[:, 0].notna()] # Remove NaNs reais
-    df_o_a_orc = df_o_a_orc[df_o_a_orc.iloc[:, 0].astype(str).str.lower() != "none"] # Remove texto "none"
-    df_o_a_orc = df_o_a_orc[df_o_a_orc.iloc[:, 0].astype(str).str.strip() != ""] # Remove linhas vazias/espaços
-
-    # 2. Ajuste de nomes de colunas para serem curtos (Mobile First)
+    # 2. Ajuste de nomes de colunas
     df_o_a_orc.columns = [meses_abr.get(pd.to_datetime(c_val).month, str(c_val)).upper() if isinstance(c_val, datetime) else str(c_val) for c_val in df_o_a_orc.columns]
         
-    # 3. Montagem do HTML/CSS e JavaScript de Interatividade
+    # 3. Montagem do HTML/CSS e JavaScript
     html_orc_final = f"""
         <div style="background-color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; margin-bottom: 40px;">
             <style>
-                .responsive-scroll-anual {{ 
-                    max-height: 550px; 
-                    overflow: auto !important; 
-                    position: relative;
-                    width: 100%;
-                }}
-
-                .v3a-table-o {{ 
-                    border-collapse: separate; 
-                    border-spacing: 0;
-                    color: #000; 
-                    font-size: 11px; 
-                    font-family: 'Segoe UI', sans-serif; 
-                    width: 100%;
-                }} 
-                
-                /* CONGELAR CABEÇALHO */
-                .v3a-table-o thead th {{ 
-                    position: sticky; 
-                    top: 0; 
-                    z-index: 100; 
-                    background: #1A1A1A; 
-                    color: #FFF; 
-                    padding: 10px 4px; 
-                    text-align: center !important; 
-                    white-space: nowrap;
-                    border-bottom: 2px solid #333;
-                }} 
-                
+                .responsive-scroll-anual {{ max-height: 550px; overflow: auto !important; position: relative; width: 100%; }}
+                .v3a-table-o {{ border-collapse: separate; border-spacing: 0; color: #000; font-size: 11px; font-family: 'Segoe UI', sans-serif; width: 100%; }} 
+                .v3a-table-o thead th {{ position: sticky; top: 0; z-index: 100; background: #1A1A1A; color: #FFF; padding: 10px 4px; text-align: center !important; white-space: nowrap; border-bottom: 2px solid #333; }} 
                 .v3a-table-o td {{ padding: 8px 4px; border-bottom: 1px solid #F0F0F0; white-space: nowrap; text-align: center; }} 
                 .v3a-table-o th, .v3a-table-o td {{ min-width: 80px; }}
-                
-                /* Primeira Coluna Fixa à Esquerda */
-                .v3a-table-o td:first-child {{ 
-                    text-align: left !important; 
-                    font-weight: bold; 
-                    min-width: 200px !important;
-                    white-space: normal !important; 
-                }} 
-
+                .v3a-table-o td:first-child {{ text-align: left !important; font-weight: bold; min-width: 200px !important; white-space: normal !important; }} 
                 .row-p1-orc {{ background-color: #FFFFFF !important; font-weight: bold; cursor: pointer; }} 
                 .row-p2-orc {{ background-color: #FFFFFF !important; font-weight: bold; cursor: pointer; display: none; }} 
                 .row-child-o-orc {{ background-color: #FFFFFF !important; display: none; }} 
-                
                 .arrow-o-orc {{ display: inline-block; width: 15px; color: #666; font-size: 10px; }}
                 .indent-orc-p2 {{ padding-left: 20px !important; font-weight: bold !important; }}
                 .indent-orc-neta {{ padding-left: 35px !important; font-weight: normal !important; font-style: italic; color: #666; font-size: 10px; }}
                 .has-tooltip {{ border-bottom: 1px dotted #B8860B; cursor: help; display: inline-block; }}
-
-                @media (max-width: 767px) {{
-                    .v3a-table-o {{ width: max-content !important; min-width: 1100px !important; }}
-                }}
+                @media (max-width: 767px) {{ .v3a-table-o {{ width: max-content !important; min-width: 1100px !important; }} }}
             </style>
-            
             <script>
                 function toggleOrc(id_o, type_o) {{ 
                     let t_o = (type_o === 'p1') ? 'p1-child-of-' + id_o : 'p2-child-of-' + id_o; 
@@ -1289,7 +1248,6 @@ elif st.session_state.pagina == "Orçamento":
                     document.getElementById('ao-' + id_o + type_o).innerHTML = isOp_o ? '▼' : '▶'; 
                 }}
             </script>
-            
             <div class="responsive-scroll-anual">
                 <table class="v3a-table-o">
                     <thead><tr>"""
@@ -1301,34 +1259,37 @@ elif st.session_state.pagina == "Orçamento":
         
     # 4. Loop de Construção das Linhas da Tabela
     cp1o_orc, cp2o_orc = 0, 0
-    ocultar_por_honorarios = False 
+    ocultar_membros = False 
 
     for _, row_o_vals in df_o_a_orc.iterrows():
         dr_orc = str(row_o_vals.iloc[0]).strip()
         dn_orc = normalize_id(dr_orc)
         
-        # Se encontrarmos um novo PAI, resetamos a trava de ocultar
+        # Se for PAI (ex: Operações), garante que a ocultação comece desligada
         if dn_orc in p_orc_l_names:
-            ocultar_por_honorarios = False
+            ocultar_membros = False
             cp1o_orc += 1
             html_orc_final += f'<tr class="row-p1-orc" onclick="toggleOrc({cp1o_orc}, \'p1\')"><td><span id="ao-{cp1o_orc}p1" class="arrow-o-orc">▶</span> {dr_orc}</td>'
         
-        # Se a trava estiver ativa (depois da Equipe Total), pulamos as linhas de pessoas
-        elif ocultar_por_honorarios:
-            continue
-            
+        # Se for SUBCATEGORIA (ex: Honorários Supply ou Honorários Operações)
         elif any(x_match in dn_orc for x_match in ["despesas", "honorario", "prospeccoes", "concorrencia"]):
+            ocultar_membros = False # RESET CLINICO: Permite que o título da nova subcategoria apareça
             cp2o_orc += 1
             html_orc_final += f'<tr class="row-p2-orc p1-child-of-{cp1o_orc} neto-of-p1-{cp1o_orc}" onclick="toggleOrc({cp2o_orc}, \'p2\')"><td class="indent-orc-p2"><span id="ao-{cp2o_orc}p2" class="arrow-o-orc">▶</span> {dr_orc}</td>'
         
+        # Se for linha de detalhe (NETO)
         else:
-            # Se a linha atual for Equipe Total, renderizamos e ativamos a trava para a próxima linha
+            # Se a trava de ocultar estiver ligada, pula a linha (não renderiza)
+            if ocultar_membros:
+                continue
+            
+            # Se for "Equipe Total", renderiza esta última linha e liga a trava para as próximas
             if "equipe total" in dr_orc.lower():
-                ocultar_por_honorarios = True
+                ocultar_membros = True
             
             html_orc_final += f'<tr class="row-child-o-orc p2-child-of-{cp2o_orc} neto-of-p1-{cp1o_orc}"><td class="indent-orc-neta">{dr_orc}</td>'
         
-        # Preenchimento das Células de Valores
+        # Preenchimento das Células (Valores)
         for j_o, v_o_cell in enumerate(row_o_vals[1:]):
             is_pct_col_o = (j_o == 4) 
             tooltip_txt = ""
@@ -1350,7 +1311,6 @@ elif st.session_state.pagina == "Orçamento":
             
     html_orc_final += "</tbody></table></div></div>"
 
-    # 5. Renderização do Componente
     st.components.v1.html(html_orc_final, height=500, scrolling=True)
     
     
