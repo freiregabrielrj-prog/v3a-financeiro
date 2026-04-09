@@ -9,11 +9,10 @@ import base64
 # 1. CONFIGURAÇÃO DE PÁGINA (Deve ser o primeiro comando Streamlit)
 st.set_page_config(page_title="V3A Financeiro", layout="wide", initial_sidebar_state="collapsed")
 
-# O page_icon aceita um caminho para imagem local ou uma URL
 st.set_page_config(
     page_title="V3A Financeiro", 
-    layout="centered",
-    page_icon="logo_v3a_icone.png" # Certifique-se de que este arquivo está na mesma pasta
+    page_icon="logo_v3a_icone.png", # Use um arquivo .png ou .ico quadrado
+    layout="centered"
 )
 
 # =================================================================
