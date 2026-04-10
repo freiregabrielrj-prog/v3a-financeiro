@@ -3,7 +3,7 @@ import pandas as pd
 import unicodedata
 from datetime import datetime
 import plotly.graph_objects as go
-import openpyxl
+import openpyxl  # Mantenha este
 import base64
 
 # 1. CONFIGURAÇÃO DE PÁGINA (WIDE para o relatório)
