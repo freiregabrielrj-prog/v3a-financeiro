@@ -3,7 +3,7 @@ import pandas as pd
 import unicodedata
 from datetime import datetime
 import plotly.graph_objects as go
-import openpyxl  # Mantenha este
+import openpyxl
 import base64
 
 # 1. CONFIGURAÇÃO DE PÁGINA (WIDE para o relatório)
@@ -258,7 +258,7 @@ st.markdown("""
     }
 
     /* 1. ESTRUTURA DA PÁGINA (WIDE E SEM ESPAÇOS SOBRANDO) */
-    [data-testid="stAppViewContainer"] { background-color: #F8F9FA !important; overflow-x: hidden !important; }
+    [data-testid="stAppViewContainer"] { background-color: #F2F2F2 !important; overflow-x: hidden !important; }
     .block-container {
         padding-top: 1rem !important;
         padding-left: 1rem !important;
@@ -321,7 +321,7 @@ st.markdown("""
     }
     .kpi-card {
         background-color: white; padding: 15px; border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        box-shadow: 0 8px 8px rgba(0,0,0,0.12);
         border-left: 5px solid #ccc;
     }
     .kpi-label { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; }
@@ -332,6 +332,18 @@ st.markdown("""
     div[data-testid="stSegmentedControl"] button[aria-checked="true"] {
         background-color: var(--v3a-gold) !important;
         color: white !important;
+    }
+    
+    /* Altera o fundo do seletor (quando fechado) e a borda */
+    div[data-testid="stSelectbox"] div[data-baseweb="select"] > div {
+        background-color: #FFFFFF !important; /* Cor de fundo desejada */
+        color: #1A1A1A !important;           /* Cor do texto */
+        border-radius: 8px !important;
+    }
+
+    /* Altera a cor da lista de opções (dropdown) */
+    ul[data-testid="stSelectboxVirtualList"] {
+        background-color: #FFFFFF !important;
     }
 
     /* 7. AJUSTES MOBILE (PREVENÇÃO DE ZOOM E ALINHAMENTO) */
@@ -380,7 +392,7 @@ shared_card_style = """
     body { margin: 0; padding: 0; background: transparent; font-family: 'Segoe UI', sans-serif; }
     .v3a-card {
         background-color: #FFFFFF !important; border-radius: 12px !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important; border: 1px solid #E9ECEF !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.01) !important; border: 1px solid #E9ECEF !important;
         padding: 20px !important; margin: 5px !important; /* Respiro para sombra */
     }
     .obs-item { display: flex; margin-bottom: 10px; align-items: flex-start; line-height: 1.4; }
@@ -712,7 +724,7 @@ if st.session_state.pagina == "DRE":
 
         # 3. HTML / CSS / JS (Com Cabeçalho Congelado)
         html_ma = f"""
-        <div style="background-color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; margin-top: 10px; margin-bottom: 40px;">
+        <div style="background-color: white; padding: 15px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #E9ECEF; margin-top: 10px; margin-bottom: 40px;">
             <style>
                 .responsive-scroll-ma {{ 
                     max-height: 500px; 
