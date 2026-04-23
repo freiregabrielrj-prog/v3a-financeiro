@@ -26,8 +26,22 @@ def tentar_login():
     else:
         st.session_state["erro_login"] = True
 
-# --- BLOCO DE LOGIN (CENTRALIZADO) ---
+# --- BLOCO DE LOGIN (CENTRALIZADO COM LOGO) ---
 if not st.session_state.autenticado:
+    # Função auxiliar para converter imagem local para base64
+    def get_base64(file_path):
+        with open(file_path, "rb") as f:
+            data = f.read()
+        return base64.b64encode(data).decode()
+
+    try:
+        # Tenta carregar a logo específica para o login
+        # Certifique-se de que o arquivo "logo_login1.png" está na mesma pasta do script
+        logo_login_b64 = get_base64("logo_login1.png") 
+        logo_html = f'<img src="data:image/png;base64,{logo_login_b64}" style="width: 220px; margin-bottom: 20px; object-fit: contain;">'
+    except:
+        logo_html = "" # Caso o arquivo não seja encontrado, o sistema não trava
+
     # CSS INJETADO APENAS NA TELA DE LOGIN
     st.markdown("""
         <style>
@@ -42,12 +56,23 @@ if not st.session_state.autenticado:
             padding: 0 !important;
         }
 
-        /* Evita quebra de texto no título */
+        /* Estilização do cabeçalho de login */
+        .login-header {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 380px;
+        }
+
         h1 { 
             white-space: nowrap !important; 
             text-align: center !important; 
-            font-size: 2.2rem !important; 
+            font-size: 1.8rem !important; 
+            margin-top: 10px !important;
             margin-bottom: 0.5rem !important;
+            color: #333;
         }
 
         /* Sincroniza largura de input e botão */
@@ -56,10 +81,22 @@ if not st.session_state.autenticado:
             max-width: 380px !important;
         }
 
-        .stTextInput input { text-align: center !important; height: 45px !important; }
-        .stButton button { width: 100% !important; height: 45px !important; }
+        .stTextInput input { 
+            text-align: center !important; 
+            height: 45px !important; 
+            border-radius: 8px !important;
+        }
+        
+        .stButton button { 
+            width: 100% !important; 
+            height: 45px !important; 
+            border-radius: 8px !important;
+            background-color: #262626 !important;
+            color: white !important;
+            font-weight: bold !important;
+        }
 
-        /* Esconde elementos nativos */
+        /* Esconde elementos nativos do Streamlit */
         footer { display: none !important; }
         [data-testid="stStatusWidget"], .stDeployButton, header, #MainMenu {
             display: none !important;
@@ -67,8 +104,14 @@ if not st.session_state.autenticado:
         </style>
     """, unsafe_allow_html=True)
 
-    st.markdown("<h1>🔒 Acesso Restrito</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='color: gray; margin-bottom: 15px;'>Digite a senha para acessar o relatório:</p>", unsafe_allow_html=True)
+    # Renderização da Logo e Textos
+    st.markdown(f"""
+        <div class="login-header">
+            {logo_html}
+            <h1>🔒 Acesso Restrito</h1>
+            <p style='color: gray; margin-bottom: 15px; font-family: sans-serif;'>Digite a senha para acessar o relatório:</p>
+        </div>
+    """, unsafe_allow_html=True)
     
     st.text_input(
         "Senha", 
@@ -735,7 +778,7 @@ if st.session_state.pagina == "DRE":
                 .ma-table {{ 
                     width: 100%; 
                     border-collapse: separate; 
-                    border-spacing: 0;
+                    border-spacing: 0;  
                     color: #000; 
                     font-size: 11px; 
                     font-family: 'Segoe UI', sans-serif; 
