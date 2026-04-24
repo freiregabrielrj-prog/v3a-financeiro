@@ -1263,7 +1263,7 @@ elif st.session_state.pagina == "Orçamento":
     
     
 
-#====================# QUADRO 2: ORÇAMENTO ANUAL (COM COMENTÁRIOS E CABEÇALHO CONGELADO) #====================#
+#====================# QUADRO 2: ORÇAMENTO ANUAL (ADAPTADO PARA MOBILE) #====================#
 
     st.markdown('<div class="header-container" style="margin-top: 20px;"><div class="quadro-num">02.</div><div class="quadro-titulo">Orçamento Anual</div></div>', unsafe_allow_html=True)
 
@@ -1284,7 +1284,6 @@ elif st.session_state.pagina == "Orçamento":
                 .v3a-table-o {{ border-collapse: separate; border-spacing: 0; color: #000; font-size: 11px; font-family: 'Segoe UI', sans-serif; width: 100%; }} 
                 .v3a-table-o thead th {{ position: sticky; top: 0; z-index: 100; background: #1A1A1A; color: #FFF; padding: 10px 4px; text-align: center !important; white-space: nowrap; border-bottom: 2px solid #333; }} 
                 .v3a-table-o td {{ padding: 8px 4px; border-bottom: 1px solid #F0F0F0; white-space: nowrap; text-align: center; }} 
-                .v3a-table-o th, .v3a-table-o td {{ min-width: 80px; }}
                 .v3a-table-o td:first-child {{ text-align: left !important; font-weight: bold; min-width: 200px !important; white-space: normal !important; }} 
                 .row-p1-orc {{ background-color: #FFFFFF !important; font-weight: bold; cursor: pointer; }} 
                 .row-p2-orc {{ background-color: #FFFFFF !important; font-weight: bold; cursor: pointer; display: none; }} 
@@ -1292,7 +1291,16 @@ elif st.session_state.pagina == "Orçamento":
                 .arrow-o-orc {{ display: inline-block; width: 15px; color: #666; font-size: 10px; }}
                 .indent-orc-p2 {{ padding-left: 20px !important; font-weight: bold !important; }}
                 .indent-orc-neta {{ padding-left: 35px !important; font-weight: normal !important; font-style: italic; color: #666; font-size: 10px; }}
-                .has-tooltip {{ border-bottom: 1px dotted #B8860B; cursor: help; display: inline-block; color: #000 !important; font-weight: bold; }}
+                
+                /* Ajuste do balão para clique no mobile */
+                .has-tooltip {{ 
+                    cursor: pointer; 
+                    display: inline-block; 
+                    color: #000 !important; 
+                    font-weight: bold; 
+                    padding: 2px;
+                }}
+                
                 @media (max-width: 767px) {{ .v3a-table-o {{ width: max-content !important; min-width: 1100px !important; }} }}
             </style>
             <script>
@@ -1310,6 +1318,11 @@ elif st.session_state.pagina == "Orçamento":
                     }} 
                     document.getElementById('ao-' + id_o + type_o).innerHTML = isOp_o ? '▼' : '▶'; 
                 }}
+
+                /* Função para mostrar comentário no Mobile via Alerta */
+                function showCom(msg) {{
+                    alert("Observação: " + msg);
+                }}
             </script>
             <div class="responsive-scroll-anual">
                 <table class="v3a-table-o">
@@ -1320,7 +1333,6 @@ elif st.session_state.pagina == "Orçamento":
         
     html_orc_final += "</tr></thead><tbody>"
         
-    # 4. Loop de Construção das Linhas da Tabela
     cp1o_orc, cp2o_orc = 0, 0
     ocultar_membros = False 
     p_orc_l_names = ["genteegestao", "financeiro", "diretoria", "comunicacao", "comercial", "operacoes", "ventures", "ondemand"]
@@ -1333,44 +1345,34 @@ elif st.session_state.pagina == "Orçamento":
             ocultar_membros = False
             cp1o_orc += 1
             html_orc_final += f'<tr class="row-p1-orc" onclick="toggleOrc({cp1o_orc}, \'p1\')"><td><span id="ao-{cp1o_orc}p1" class="arrow-o-orc">▶</span> {dr_orc}</td>'
-        
         elif any(x_match in dn_orc for x_match in ["despesas", "honorario", "prospeccoes", "concorrencia"]):
             ocultar_membros = False 
             cp2o_orc += 1
             html_orc_final += f'<tr class="row-p2-orc p1-child-of-{cp1o_orc} neto-of-p1-{cp1o_orc}" onclick="toggleOrc({cp2o_orc}, \'p2\')"><td class="indent-orc-p2"><span id="ao-{cp2o_orc}p2" class="arrow-o-orc">▶</span> {dr_orc}</td>'
-        
         else:
-            if ocultar_membros:
-                continue
-            if "equipe total" in dr_orc.lower():
-                ocultar_membros = True
+            if ocultar_membros: continue
+            if "equipe total" in dr_orc.lower(): ocultar_membros = True
             html_orc_final += f'<tr class="row-child-o-orc p2-child-of-{cp2o_orc} neto-of-p1-{cp1o_orc}"><td class="indent-orc-neta">{dr_orc}</td>'
         
-        # Preenchimento das Células (Valores e Comentários)
         for j_o, v_o_cell in enumerate(row_o_vals[1:]):
             is_pct_col_o = (j_o == 4) 
             tooltip_txt = ""
             valor_para_formatar = v_o_cell
-            
-            # Lógica para separar Valor de Comentário extraído pelo openpyxl via separador '||'
             if isinstance(v_o_cell, str) and "||" in v_o_cell:
                 partes = v_o_cell.split("||")
                 valor_para_formatar = partes[0] if partes[0] != "" else 0
                 tooltip_txt = partes[1]
 
-            # Aplica formatação numérica padrão
             val_formatado = fmt(safe_float(valor_para_formatar) * -1, is_pct=True, is_variance_col=True) if is_pct_col_o else fmt(valor_para_formatar)
             
             if tooltip_txt:
-                # Insere o balão 💬 e o texto no atributo 'title' para efeito de hover
-                html_orc_final += f'<td title="{tooltip_txt}"><span class="has-tooltip">{val_formatado} 💬</span></td>'
+                # ADICIONADO: onclick="showCom(...)" para funcionar no mobile
+                html_orc_final += f'<td title="{tooltip_txt}"><span class="has-tooltip" onclick="showCom(\'{tooltip_txt}\')">{val_formatado} 💬</span></td>'
             else:
                 html_orc_final += f'<td>{val_formatado}</td>'
-        
         html_orc_final += '</tr>'
             
     html_orc_final += "</tbody></table></div></div>"
-
     st.components.v1.html(html_orc_final, height=550, scrolling=True)
     
     
