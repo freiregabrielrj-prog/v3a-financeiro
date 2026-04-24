@@ -26,26 +26,28 @@ def tentar_login():
     else:
         st.session_state["erro_login"] = True
 
-# --- BLOCO DE LOGIN (CENTRALIZADO COM LOGO) ---
+# --- BLOCO DE LOGIN (CENTRALIZADO COM LOGO E BOTÃO AJUSTADO) ---
 if not st.session_state.autenticado:
     # Função auxiliar para converter imagem local para base64
     def get_base64(file_path):
-        with open(file_path, "rb") as f:
-            data = f.read()
-        return base64.b64encode(data).decode()
+        try:
+            with open(file_path, "rb") as f:
+                data = f.read()
+            return base64.b64encode(data).decode()
+        except:
+            return None
 
-    try:
-        # Tenta carregar a logo específica para o login
-        # Certifique-se de que o arquivo "logo_login1.png" está na mesma pasta do script
-        logo_login_b64 = get_base64("logo_login1.png") 
+    # Tenta carregar a logo específica para o login
+    logo_login_b64 = get_base64("logo_login1.png") 
+    if logo_login_b64:
         logo_html = f'<img src="data:image/png;base64,{logo_login_b64}" style="width: 220px; margin-bottom: 20px; object-fit: contain;">'
-    except:
-        logo_html = "" # Caso o arquivo não seja encontrado, o sistema não trava
+    else:
+        logo_html = "" 
 
     # CSS INJETADO APENAS NA TELA DE LOGIN
     st.markdown("""
         <style>
-        /* Centraliza apenas o conteúdo desta fase */
+        /* 1. Centralização Global da Página */
         .main .block-container {
             display: flex !important;
             flex-direction: column !important;
@@ -56,7 +58,7 @@ if not st.session_state.autenticado:
             padding: 0 !important;
         }
 
-        /* Estilização do cabeçalho de login */
+        /* 2. Estilização do cabeçalho de login */
         .login-header {
             text-align: center;
             display: flex;
@@ -75,10 +77,12 @@ if not st.session_state.autenticado:
             color: #333;
         }
 
-        /* Sincroniza largura de input e botão */
+        /* 3. Sincroniza largura de input e botão e garante centralização do container */
         .stTextInput, .stButton, [data-testid="stVerticalBlock"] {
             width: 100% !important;
             max-width: 380px !important;
+            display: flex !important;
+            justify-content: center !important;
         }
 
         .stTextInput input { 
@@ -87,6 +91,7 @@ if not st.session_state.autenticado:
             border-radius: 8px !important;
         }
         
+        /* Força o botão a ocupar a largura total do container e centralizar o texto */
         .stButton button { 
             width: 100% !important; 
             height: 45px !important; 
@@ -94,6 +99,11 @@ if not st.session_state.autenticado:
             background-color: #262626 !important;
             color: white !important;
             font-weight: bold !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+        margin-left: auto !important;
+            margin-right: auto !important;
         }
 
         /* Esconde elementos nativos do Streamlit */
@@ -182,33 +192,31 @@ def load_all_v3a_data():
     xls = pd.ExcelFile(file_path)
     
     def read_sheet_with_comments(sheet_name, max_cols=18):
-        try:
-            # ADICIONADO: read_only=True e data_only=True para não travar
-            wb = openpyxl.load_workbook(file_path, data_only=True, read_only=True)
-            ws = wb[sheet_name]
-            data_rows = []
-            for row in ws.iter_rows(max_col=max_cols):
-                row_data = []
-                for cell in row:
-                    val = cell.value
-                    # Verifica se existe comentário
-                    if hasattr(cell, 'comment') and cell.comment:
-                        comment_text = cell.comment.text.strip().replace('\n', ' ').replace('"', "'")
-                        val = f"{val if val is not None else ''}||{comment_text}"
-                    row_data.append(val)
-                data_rows.append(row_data)
-            
-            # ADICIONADO: Fecha o arquivo explicitamente
-            wb.close()
-            
-            df = pd.DataFrame(data_rows)
-            if not df.empty:
-                df.columns = df.iloc[0]
-                return df[1:].reset_index(drop=True)
-            return pd.DataFrame()
-        except Exception as e:
-            print(f"Erro ao ler comentários: {e}")
-            return pd.DataFrame()
+            try:
+                # REMOVIDO read_only=True para carregar os metadados (comentários)
+                wb = openpyxl.load_workbook(file_path, data_only=True)
+                ws = wb[sheet_name]
+                data_rows = []
+                for row in ws.iter_rows(max_col=max_cols):
+                    row_data = []
+                    for cell in row:
+                        val = cell.value
+                        # Captura o comentário se ele existir
+                        if hasattr(cell, 'comment') and cell.comment:
+                            comment_text = cell.comment.text.strip().replace('\n', ' ').replace('"', "'")
+                            val = f"{val if val is not None else ''}||{comment_text}"
+                        row_data.append(val)
+                    data_rows.append(row_data)
+                wb.close()
+                
+                df = pd.DataFrame(data_rows)
+                if not df.empty:
+                    df.columns = df.iloc[0]
+                    return df[1:].reset_index(drop=True)
+                return pd.DataFrame()
+            except Exception as e:
+                print(f"Erro ao ler comentários: {e}")
+                return pd.DataFrame()
 
     def clean_sheet(name, skip=0, columns=None):
         try:
@@ -1255,8 +1263,8 @@ elif st.session_state.pagina == "Orçamento":
     
     
 
-#====================# QUADRO 2: ORÇAMENTO ANUAL (CABEÇALHO CONGELADO) #====================#
-    
+#====================# QUADRO 2: ORÇAMENTO ANUAL (COM COMENTÁRIOS E CABEÇALHO CONGELADO) #====================#
+
     st.markdown('<div class="header-container" style="margin-top: 20px;"><div class="quadro-num">02.</div><div class="quadro-titulo">Orçamento Anual</div></div>', unsafe_allow_html=True)
 
     # 1. Carga e Limpeza de dados
@@ -1270,7 +1278,7 @@ elif st.session_state.pagina == "Orçamento":
         
     # 3. Montagem do HTML/CSS e JavaScript
     html_orc_final = f"""
-        <div style="background-color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #E9ECEF; margin-bottom: 40px;">
+        <div style="background-color: white; padding: 15px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); border: 1px solid #E9ECEF; margin-bottom: 40px;">
             <style>
                 .responsive-scroll-anual {{ max-height: 550px; overflow: auto !important; position: relative; width: 100%; }}
                 .v3a-table-o {{ border-collapse: separate; border-spacing: 0; color: #000; font-size: 11px; font-family: 'Segoe UI', sans-serif; width: 100%; }} 
@@ -1284,7 +1292,7 @@ elif st.session_state.pagina == "Orçamento":
                 .arrow-o-orc {{ display: inline-block; width: 15px; color: #666; font-size: 10px; }}
                 .indent-orc-p2 {{ padding-left: 20px !important; font-weight: bold !important; }}
                 .indent-orc-neta {{ padding-left: 35px !important; font-weight: normal !important; font-style: italic; color: #666; font-size: 10px; }}
-                .has-tooltip {{ border-bottom: 1px dotted #B8860B; cursor: help; display: inline-block; }}
+                .has-tooltip {{ border-bottom: 1px dotted #B8860B; cursor: help; display: inline-block; color: #000 !important; font-weight: bold; }}
                 @media (max-width: 767px) {{ .v3a-table-o {{ width: max-content !important; min-width: 1100px !important; }} }}
             </style>
             <script>
@@ -1315,49 +1323,46 @@ elif st.session_state.pagina == "Orçamento":
     # 4. Loop de Construção das Linhas da Tabela
     cp1o_orc, cp2o_orc = 0, 0
     ocultar_membros = False 
+    p_orc_l_names = ["genteegestao", "financeiro", "diretoria", "comunicacao", "comercial", "operacoes", "ventures", "ondemand"]
 
     for _, row_o_vals in df_o_a_orc.iterrows():
         dr_orc = str(row_o_vals.iloc[0]).strip()
         dn_orc = normalize_id(dr_orc)
         
-        # Se for PAI (ex: Operações), garante que a ocultação comece desligada
         if dn_orc in p_orc_l_names:
             ocultar_membros = False
             cp1o_orc += 1
             html_orc_final += f'<tr class="row-p1-orc" onclick="toggleOrc({cp1o_orc}, \'p1\')"><td><span id="ao-{cp1o_orc}p1" class="arrow-o-orc">▶</span> {dr_orc}</td>'
         
-        # Se for SUBCATEGORIA (ex: Honorários Supply ou Honorários Operações)
         elif any(x_match in dn_orc for x_match in ["despesas", "honorario", "prospeccoes", "concorrencia"]):
-            ocultar_membros = False # RESET CLINICO: Permite que o título da nova subcategoria apareça
+            ocultar_membros = False 
             cp2o_orc += 1
             html_orc_final += f'<tr class="row-p2-orc p1-child-of-{cp1o_orc} neto-of-p1-{cp1o_orc}" onclick="toggleOrc({cp2o_orc}, \'p2\')"><td class="indent-orc-p2"><span id="ao-{cp2o_orc}p2" class="arrow-o-orc">▶</span> {dr_orc}</td>'
         
-        # Se for linha de detalhe (NETO)
         else:
-            # Se a trava de ocultar estiver ligada, pula a linha (não renderiza)
             if ocultar_membros:
                 continue
-            
-            # Se for "Equipe Total", renderiza esta última linha e liga a trava para as próximas
             if "equipe total" in dr_orc.lower():
                 ocultar_membros = True
-            
             html_orc_final += f'<tr class="row-child-o-orc p2-child-of-{cp2o_orc} neto-of-p1-{cp1o_orc}"><td class="indent-orc-neta">{dr_orc}</td>'
         
-        # Preenchimento das Células (Valores)
+        # Preenchimento das Células (Valores e Comentários)
         for j_o, v_o_cell in enumerate(row_o_vals[1:]):
             is_pct_col_o = (j_o == 4) 
             tooltip_txt = ""
             valor_para_formatar = v_o_cell
             
+            # Lógica para separar Valor de Comentário extraído pelo openpyxl via separador '||'
             if isinstance(v_o_cell, str) and "||" in v_o_cell:
                 partes = v_o_cell.split("||")
                 valor_para_formatar = partes[0] if partes[0] != "" else 0
                 tooltip_txt = partes[1]
 
+            # Aplica formatação numérica padrão
             val_formatado = fmt(safe_float(valor_para_formatar) * -1, is_pct=True, is_variance_col=True) if is_pct_col_o else fmt(valor_para_formatar)
             
             if tooltip_txt:
+                # Insere o balão 💬 e o texto no atributo 'title' para efeito de hover
                 html_orc_final += f'<td title="{tooltip_txt}"><span class="has-tooltip">{val_formatado} 💬</span></td>'
             else:
                 html_orc_final += f'<td>{val_formatado}</td>'
@@ -1366,7 +1371,7 @@ elif st.session_state.pagina == "Orçamento":
             
     html_orc_final += "</tbody></table></div></div>"
 
-    st.components.v1.html(html_orc_final, height=500, scrolling=True)
+    st.components.v1.html(html_orc_final, height=550, scrolling=True)
     
     
     
