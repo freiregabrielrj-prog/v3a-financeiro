@@ -26,6 +26,7 @@ def tentar_login():
     else:
         st.session_state["erro_login"] = True
 
+
 # --- BLOCO DE LOGIN (CENTRALIZADO COM LOGO E BOTÃO AJUSTADO) ---
 if not st.session_state.autenticado:
     # Função auxiliar para converter imagem local para base64
@@ -40,7 +41,7 @@ if not st.session_state.autenticado:
     # Tenta carregar a logo específica para o login
     logo_login_b64 = get_base64("logo_login1.png") 
     if logo_login_b64:
-        logo_html = f'<img src="data:image/png;base64,{logo_login_b64}" style="width: 220px; margin-bottom: 20px; object-fit: contain;">'
+        logo_html = f'<img src="data:image/png;base64,{logo_login_b64}" style="width: 180px; margin-bottom: 0px; object-fit: contain;">'
     else:
         logo_html = "" 
 
@@ -53,8 +54,8 @@ if not st.session_state.autenticado:
             flex-direction: column !important;
             justify-content: center !important;
             align-items: center !important;
-            height: 100vh !important;
-            min-height: 100vh !important;
+            height: 0vh !important;
+            min-height: 0vh !important;
             padding: 0 !important;
         }
 
@@ -102,7 +103,7 @@ if not st.session_state.autenticado:
             display: flex !important;
             justify-content: center !important;
             align-items: center !important;
-        margin-left: auto !important;
+            margin-left: auto !important;
             margin-right: auto !important;
         }
 
@@ -118,7 +119,7 @@ if not st.session_state.autenticado:
     st.markdown(f"""
         <div class="login-header">
             {logo_html}
-            <h1>🔒 Acesso Restrito</h1>
+            <h1>Financeiro</h1>
             <p style='color: gray; margin-bottom: 15px; font-family: sans-serif;'>Digite a senha para acessar o relatório:</p>
         </div>
     """, unsafe_allow_html=True)
