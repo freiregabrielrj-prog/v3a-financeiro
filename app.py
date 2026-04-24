@@ -203,7 +203,7 @@ def load_all_v3a_data():
                         val = cell.value
                         # Captura o comentário se ele existir
                         if hasattr(cell, 'comment') and cell.comment:
-                            comment_text = cell.comment.text.strip().replace('\n', ' ').replace('"', "'")
+                            comment_text = cell.comment.text.strip().replace('"', "'")
                             val = f"{val if val is not None else ''}||{comment_text}"
                         row_data.append(val)
                     data_rows.append(row_data)
@@ -1263,7 +1263,7 @@ elif st.session_state.pagina == "Orçamento":
     
     
 
-#====================# QUADRO 2: ORÇAMENTO ANUAL (ADAPTADO PARA MOBILE) #====================#
+#====================# QUADRO 2: ORÇAMENTO ANUAL (FORMATADO) #====================#
 
     st.markdown('<div class="header-container" style="margin-top: 20px;"><div class="quadro-num">02.</div><div class="quadro-titulo">Orçamento Anual</div></div>', unsafe_allow_html=True)
 
@@ -1292,13 +1292,12 @@ elif st.session_state.pagina == "Orçamento":
                 .indent-orc-p2 {{ padding-left: 20px !important; font-weight: bold !important; }}
                 .indent-orc-neta {{ padding-left: 35px !important; font-weight: normal !important; font-style: italic; color: #666; font-size: 10px; }}
                 
-                /* Ajuste do balão para clique no mobile */
                 .has-tooltip {{ 
                     cursor: pointer; 
                     display: inline-block; 
                     color: #000 !important; 
                     font-weight: bold; 
-                    padding: 2px;
+                    border-bottom: 1px dotted #CCC;
                 }}
                 
                 @media (max-width: 767px) {{ .v3a-table-o {{ width: max-content !important; min-width: 1100px !important; }} }}
@@ -1319,9 +1318,9 @@ elif st.session_state.pagina == "Orçamento":
                     document.getElementById('ao-' + id_o + type_o).innerHTML = isOp_o ? '▼' : '▶'; 
                 }}
 
-                /* Função para mostrar comentário no Mobile via Alerta */
                 function showCom(msg) {{
-                    alert("Observação: " + msg);
+                    // O alert do navegador reconhece naturalmente o \\n como quebra de linha
+                    alert("Observações:\\n" + msg);
                 }}
             </script>
             <div class="responsive-scroll-anual">
@@ -1361,12 +1360,14 @@ elif st.session_state.pagina == "Orçamento":
             if isinstance(v_o_cell, str) and "||" in v_o_cell:
                 partes = v_o_cell.split("||")
                 valor_para_formatar = partes[0] if partes[0] != "" else 0
-                tooltip_txt = partes[1]
+                # Prepara o texto para o JavaScript (escapando quebras de linha)
+                tooltip_txt = partes[1].replace('\n', '\\n')
 
             val_formatado = fmt(safe_float(valor_para_formatar) * -1, is_pct=True, is_variance_col=True) if is_pct_col_o else fmt(valor_para_formatar)
             
             if tooltip_txt:
-                # ADICIONADO: onclick="showCom(...)" para funcionar no mobile
+                # title="{tooltip_txt}" mantém a quebra no computador
+                # onclick="showCom(...)" mantém a quebra no mobile (alert)
                 html_orc_final += f'<td title="{tooltip_txt}"><span class="has-tooltip" onclick="showCom(\'{tooltip_txt}\')">{val_formatado} 💬</span></td>'
             else:
                 html_orc_final += f'<td>{val_formatado}</td>'
