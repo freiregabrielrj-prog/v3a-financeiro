@@ -18,7 +18,7 @@ st.set_page_config(
 if 'autenticado' not in st.session_state:
     st.session_state.autenticado = False
 
-SENHA_CORRETA = "cashflow"
+SENHA_CORRETA = "#v3aresult"
 
 def tentar_login():
     if st.session_state.senha_input == SENHA_CORRETA:
